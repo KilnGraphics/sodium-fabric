@@ -8,8 +8,9 @@ import net.fabricmc.loader.api.ModContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SodiumClient {
+import java.io.IOException;
 
+public class SodiumClient {
     private static SodiumRenderConfig CONFIG;
     private static Logger LOGGER;
 
@@ -24,12 +25,15 @@ public class SodiumClient {
                 .getVersion()
                 .getFriendlyString();
 
+        LOGGER = LogManager.getLogger("Sodium");
+        CONFIG = loadConfig();
+
         RendererAccess.INSTANCE.registerRenderer(SodiumRenderer.INSTANCE);
     }
 
     public static SodiumRenderConfig options() {
         if (CONFIG == null) {
-            CONFIG = loadConfig();
+            throw new IllegalStateException("Config not yet available");
         }
 
         return CONFIG;
@@ -37,14 +41,34 @@ public class SodiumClient {
 
     public static Logger logger() {
         if (LOGGER == null) {
-            LOGGER = LogManager.getLogger("Sodium");
+            throw new IllegalStateException("Logger not yet available");
         }
 
         return LOGGER;
     }
 
     private static SodiumRenderConfig loadConfig() {
-        return SodiumRenderConfig.load(FabricLoader.getInstance().getConfigDir().resolve("sodium-options.json"));
+        try {
+            return SodiumRenderConfig.load();
+        } catch (Exception e) {
+            LOGGER.error("Failed to load configuration file", e);
+            LOGGER.error("Using default configuration file in read-only mode");
+
+            var config = new SodiumRenderConfig();
+            config.setReadOnly();
+
+            return config;
+        }
+    }
+
+    public static void restoreDefaultOptions() {
+        CONFIG = SodiumRenderConfig.defaults();
+
+        try {
+            CONFIG.writeChanges();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write config file", e);
+        }
     }
 
     public static String getVersion() {
@@ -55,4 +79,7 @@ public class SodiumClient {
         return MOD_VERSION;
     }
 
+    public static boolean isDirectMemoryAccessEnabled() {
+        return options().advanced.allowDirectMemoryAccess;
+    }
 }

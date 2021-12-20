@@ -50,7 +50,7 @@ public abstract class MixinItemRenderer implements ItemRendererBatched {
 
     @Shadow
     @Final
-    private ItemColors colorMap;
+    private ItemColors colors;
 
     @Shadow
     public float zOffset;
@@ -103,7 +103,7 @@ public abstract class MixinItemRenderer implements ItemRendererBatched {
 
             if (!stack.isEmpty() && bakedQuad.hasColor()) {
                 if (colorProvider == null) {
-                    colorProvider = ((ItemColorsExtended) this.colorMap).getColorProvider(stack);
+                    colorProvider = ((ItemColorsExtended) this.colors).getColorProvider(stack);
                 }
 
                 color = ColorARGB.toABGR((colorProvider.getColor(stack, bakedQuad.getColorIndex())), 255);

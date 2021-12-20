@@ -24,8 +24,8 @@ public class MixinWorldRenderer {
     public static void drawBox(MatrixStack matrices, VertexConsumer vertexConsumer, double x1, double y1, double z1,
                                double x2, double y2, double z2, float red, float green, float blue, float alpha,
                                float xAxisRed, float yAxisGreen, float zAxisBlue) {
-        Matrix4f model = matrices.peek().getModel();
-        Matrix3f normal = matrices.peek().getNormal();
+        Matrix4f position = matrices.peek().getPositionMatrix();
+        Matrix3f normal = matrices.peek().getNormalMatrix();
 
         float x1f = (float) x1;
         float y1f = (float) y1;
@@ -36,37 +36,37 @@ public class MixinWorldRenderer {
 
         int color = ColorABGR.pack(red, green, blue, alpha);
 
-        float v1x = Matrix4fUtil.transformVectorX(model, x1f, y1f, z1f);
-        float v1y = Matrix4fUtil.transformVectorY(model, x1f, y1f, z1f);
-        float v1z = Matrix4fUtil.transformVectorZ(model, x1f, y1f, z1f);
+        float v1x = Matrix4fUtil.transformVectorX(position, x1f, y1f, z1f);
+        float v1y = Matrix4fUtil.transformVectorY(position, x1f, y1f, z1f);
+        float v1z = Matrix4fUtil.transformVectorZ(position, x1f, y1f, z1f);
         
-        float v2x = Matrix4fUtil.transformVectorX(model, x2f, y1f, z1f);
-        float v2y = Matrix4fUtil.transformVectorY(model, x2f, y1f, z1f);
-        float v2z = Matrix4fUtil.transformVectorZ(model, x2f, y1f, z1f);
+        float v2x = Matrix4fUtil.transformVectorX(position, x2f, y1f, z1f);
+        float v2y = Matrix4fUtil.transformVectorY(position, x2f, y1f, z1f);
+        float v2z = Matrix4fUtil.transformVectorZ(position, x2f, y1f, z1f);
         
-        float v3x = Matrix4fUtil.transformVectorX(model, x1f, y2f, z1f);
-        float v3y = Matrix4fUtil.transformVectorY(model, x1f, y2f, z1f);
-        float v3z = Matrix4fUtil.transformVectorZ(model, x1f, y2f, z1f);
+        float v3x = Matrix4fUtil.transformVectorX(position, x1f, y2f, z1f);
+        float v3y = Matrix4fUtil.transformVectorY(position, x1f, y2f, z1f);
+        float v3z = Matrix4fUtil.transformVectorZ(position, x1f, y2f, z1f);
         
-        float v4x = Matrix4fUtil.transformVectorX(model, x1f, y1f, z2f);
-        float v4y = Matrix4fUtil.transformVectorY(model, x1f, y1f, z2f);
-        float v4z = Matrix4fUtil.transformVectorZ(model, x1f, y1f, z2f);
+        float v4x = Matrix4fUtil.transformVectorX(position, x1f, y1f, z2f);
+        float v4y = Matrix4fUtil.transformVectorY(position, x1f, y1f, z2f);
+        float v4z = Matrix4fUtil.transformVectorZ(position, x1f, y1f, z2f);
         
-        float v5x = Matrix4fUtil.transformVectorX(model, x2f, y2f, z1f);
-        float v5y = Matrix4fUtil.transformVectorY(model, x2f, y2f, z1f);
-        float v5z = Matrix4fUtil.transformVectorZ(model, x2f, y2f, z1f);
+        float v5x = Matrix4fUtil.transformVectorX(position, x2f, y2f, z1f);
+        float v5y = Matrix4fUtil.transformVectorY(position, x2f, y2f, z1f);
+        float v5z = Matrix4fUtil.transformVectorZ(position, x2f, y2f, z1f);
         
-        float v6x = Matrix4fUtil.transformVectorX(model, x1f, y2f, z2f);
-        float v6y = Matrix4fUtil.transformVectorY(model, x1f, y2f, z2f);
-        float v6z = Matrix4fUtil.transformVectorZ(model, x1f, y2f, z2f);
+        float v6x = Matrix4fUtil.transformVectorX(position, x1f, y2f, z2f);
+        float v6y = Matrix4fUtil.transformVectorY(position, x1f, y2f, z2f);
+        float v6z = Matrix4fUtil.transformVectorZ(position, x1f, y2f, z2f);
         
-        float v7x = Matrix4fUtil.transformVectorX(model, x2f, y1f, z2f);
-        float v7y = Matrix4fUtil.transformVectorY(model, x2f, y1f, z2f);
-        float v7z = Matrix4fUtil.transformVectorZ(model, x2f, y1f, z2f);
+        float v7x = Matrix4fUtil.transformVectorX(position, x2f, y1f, z2f);
+        float v7y = Matrix4fUtil.transformVectorY(position, x2f, y1f, z2f);
+        float v7z = Matrix4fUtil.transformVectorZ(position, x2f, y1f, z2f);
         
-        float v8x = Matrix4fUtil.transformVectorX(model, x2f, y2f, z2f);
-        float v8y = Matrix4fUtil.transformVectorY(model, x2f, y2f, z2f);
-        float v8z = Matrix4fUtil.transformVectorZ(model, x2f, y2f, z2f);
+        float v8x = Matrix4fUtil.transformVectorX(position, x2f, y2f, z2f);
+        float v8y = Matrix4fUtil.transformVectorY(position, x2f, y2f, z2f);
+        float v8z = Matrix4fUtil.transformVectorZ(position, x2f, y2f, z2f);
 
         LineVertexSink lines = VertexDrain.of(vertexConsumer)
                 .createSink(VanillaVertexTypes.LINES);

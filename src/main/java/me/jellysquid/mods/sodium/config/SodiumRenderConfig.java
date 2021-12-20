@@ -4,8 +4,8 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.jellysquid.mods.sodium.util.TextProvider;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.option.GraphicsMode;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 
@@ -17,12 +17,24 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class SodiumRenderConfig {
+    private static final String DEFAULT_FILE_NAME = "sodium-options.json";
+
     public final QualitySettings quality = new QualitySettings();
     public final AdvancedSettings advanced = new AdvancedSettings();
     public final PerformanceSettings performance = new PerformanceSettings();
     public final NotificationSettings notifications = new NotificationSettings();
 
+    private boolean readOnly;
+
     private Path configPath;
+
+    public static SodiumRenderConfig defaults() {
+        var options = new SodiumRenderConfig();
+        options.configPath = getConfigPath(DEFAULT_FILE_NAME);
+        options.sanitize();
+
+        return options;
+    }
 
     public static class PerformanceSettings {
         public int chunkBuilderThreads = 0;
@@ -42,12 +54,14 @@ public class SodiumRenderConfig {
         public boolean enableMemoryTracing = false;
         public boolean useAdvancedStagingBuffers = true;
 
-        public int maxPreRenderedFrames = 3;
+        public int cpuRenderAheadLimit = 3;
     }
 
     public static class QualitySettings {
         public GraphicsQuality weatherQuality = GraphicsQuality.DEFAULT;
+        public GraphicsQuality leavesQuality = GraphicsQuality.DEFAULT;
         public int detailDistance = 0;
+
         public boolean enableVignette = true;
     }
 
@@ -56,21 +70,17 @@ public class SodiumRenderConfig {
     }
 
     public enum ArenaMemoryAllocator implements TextProvider {
-        ASYNC("Async"),
-        SWAP("Swap");
+        ASYNC("sodium.options.chunk_memory_allocator.async"),
+        SWAP("sodium.options.chunk_memory_allocator.swap");
 
-        private final String name;
+        private final Text name;
 
         ArenaMemoryAllocator(String name) {
-            this.name = name;
+            this.name = new TranslatableText(name);
         }
 
         @Override
         public Text getLocalizedName() {
-            return new LiteralText(this.name);
-        }
-
-        public String getName() {
             return this.name;
         }
     }
@@ -102,7 +112,12 @@ public class SodiumRenderConfig {
             .excludeFieldsWithModifiers(Modifier.PRIVATE)
             .create();
 
-    public static SodiumRenderConfig load(Path path) {
+    public static SodiumRenderConfig load() {
+        return load(DEFAULT_FILE_NAME);
+    }
+
+    public static SodiumRenderConfig load(String name) {
+        Path path = getConfigPath(name);
         SodiumRenderConfig config;
 
         if (Files.exists(path)) {
@@ -116,10 +131,7 @@ public class SodiumRenderConfig {
         }
 
         config.configPath = path;
-
-        if (config.advanced.arenaMemoryAllocator == null) {
-            config.advanced.arenaMemoryAllocator = ArenaMemoryAllocator.ASYNC;
-        }
+        config.sanitize();
 
         try {
             config.writeChanges();
@@ -130,7 +142,23 @@ public class SodiumRenderConfig {
         return config;
     }
 
+    private void sanitize() {
+        if (this.advanced.arenaMemoryAllocator == null) {
+            this.advanced.arenaMemoryAllocator = ArenaMemoryAllocator.ASYNC;
+        }
+    }
+
+    private static Path getConfigPath(String name) {
+        return FabricLoader.getInstance()
+                .getConfigDir()
+                .resolve(name);
+    }
+
     public void writeChanges() throws IOException {
+        if (this.isReadOnly()) {
+            throw new IllegalStateException("Config file is read-only");
+        }
+
         Path dir = this.configPath.getParent();
 
         if (!Files.exists(dir)) {
@@ -147,5 +175,17 @@ public class SodiumRenderConfig {
 
         // Atomically replace the old config file (if it exists) with the temporary file
         Files.move(tempPath, this.configPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    public boolean isReadOnly() {
+        return this.readOnly;
+    }
+
+    public void setReadOnly() {
+        this.readOnly = true;
+    }
+
+    public String getFileName() {
+        return this.configPath.getFileName().toString();
     }
 }

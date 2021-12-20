@@ -6,7 +6,9 @@ import me.jellysquid.mods.sodium.render.chunk.tasks.ChunkRenderBuildTask;
 import me.jellysquid.mods.sodium.render.renderer.TerrainRenderContext;
 import me.jellysquid.mods.sodium.util.collections.QueueDrainingIterator;
 import me.jellysquid.mods.sodium.util.task.CancellationSource;
+import me.jellysquid.mods.sodium.util.collections.QueueDrainingIterator;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
@@ -179,6 +181,16 @@ public class ChunkBuilder {
 
     private static int getMaxThreadCount() {
         return Runtime.getRuntime().availableProcessors();
+        return MathHelper.clamp(Math.max(getMaxThreadCount() / 3, getMaxThreadCount() - 6), 1, 10);
+    }
+
+    private static int getThreadCount() {
+        int requested = SodiumClient.options().performance.chunkBuilderThreads;
+        return requested == 0 ? getOptimalThreadCount() : Math.min(requested, getMaxThreadCount());
+    }
+
+    private static int getMaxThreadCount() {
+        return Runtime.getRuntime().availableProcessors();
     }
 
     public CompletableFuture<Void> scheduleDeferred(ChunkRenderBuildTask task) {
@@ -245,6 +257,16 @@ public class ChunkBuilder {
         }
 
         ChunkBuildResult result;
+
+        try {
+            // Perform the build task with this worker's local resources and obtain the result
+            result = job.task.performBuild(context.terrainRenderer, job);
+        } catch (Exception e) {
+            // Propagate any exception from chunk building
+            job.future.completeExceptionally(e);
+            e.printStackTrace();
+            return;
+        }
 
         try {
             // Perform the build task with this worker's local resources and obtain the result

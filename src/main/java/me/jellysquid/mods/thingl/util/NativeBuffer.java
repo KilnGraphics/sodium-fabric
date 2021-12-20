@@ -3,6 +3,7 @@ package me.jellysquid.mods.thingl.util;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMaps;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import me.jellysquid.mods.sodium.SodiumClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.system.MemoryUtil;
@@ -15,9 +16,6 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class NativeBuffer {
-    private static final boolean USE_MEMORY_TRACING = System.getProperty("thingl.memory.tracing", "false")
-            .equalsIgnoreCase("true");
-
     private static final Logger LOGGER = LogManager.getLogger(NativeBuffer.class);
 
     private static final ReferenceQueue<NativeBuffer> RECLAIM_QUEUE = new ReferenceQueue<>();
@@ -88,7 +86,8 @@ public class NativeBuffer {
     }
 
     private static StackTraceElement[] getStackTrace() {
-        return USE_MEMORY_TRACING ? Thread.currentThread().getStackTrace() : null;
+        return SodiumClient.options().advanced.enableMemoryTracing ? Thread.currentThread()
+                .getStackTrace() : null;
     }
 
     private static final int MAX_ALLOCATION_ATTEMPTS = 3;

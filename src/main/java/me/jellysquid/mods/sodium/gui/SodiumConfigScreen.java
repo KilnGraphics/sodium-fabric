@@ -85,7 +85,7 @@ public class SodiumConfigScreen extends Screen {
 
         this.undoButton = new FlatButtonWidget(new Dim2i(this.width - 211, this.height - 30, 65, 20), new TranslatableText("sodium.options.buttons.undo"), this::undoChanges);
         this.applyButton = new FlatButtonWidget(new Dim2i(this.width - 142, this.height - 30, 65, 20), new TranslatableText("sodium.options.buttons.apply"), this::applyChanges);
-        this.closeButton = new FlatButtonWidget(new Dim2i(this.width - 73, this.height - 30, 65, 20), new TranslatableText("sodium.options.buttons.close"), this::onClose);
+        this.closeButton = new FlatButtonWidget(new Dim2i(this.width - 73, this.height - 30, 65, 20), new TranslatableText("gui.done"), this::onClose);
         this.donateButton = new FlatButtonWidget(new Dim2i(this.width - 128, 6, 100, 20), new TranslatableText("sodium.options.buttons.donate"), this::openDonationPage);
         this.hideDonateButton = new FlatButtonWidget(new Dim2i(this.width - 26, 6, 20, 20), new LiteralText("x"), this::hideDonationButton);
 
@@ -286,7 +286,7 @@ public class SodiumConfigScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == GLFW.GLFW_KEY_P && (modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
-            MinecraftClient.getInstance().openScreen(new VideoOptionsScreen(this.prevScreen, MinecraftClient.getInstance().options));
+            MinecraftClient.getInstance().setScreen(new VideoOptionsScreen(this.prevScreen, MinecraftClient.getInstance().options));
 
             return true;
         }
@@ -301,6 +301,6 @@ public class SodiumConfigScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.client.openScreen(this.prevScreen);
+        this.client.setScreen(this.prevScreen);
     }
 }
