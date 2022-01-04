@@ -37,6 +37,7 @@ public class MixinConfig {
         this.addMixinRule("features.debug", true);
         this.addMixinRule("features.entity", true);
         this.addMixinRule("features.entity.fast_render", true);
+        this.addMixinRule("features.entity.instancing", true);
         this.addMixinRule("features.entity.smooth_lighting", true);
         this.addMixinRule("features.gui", true);
         this.addMixinRule("features.gui.fast_loading_screen", true);

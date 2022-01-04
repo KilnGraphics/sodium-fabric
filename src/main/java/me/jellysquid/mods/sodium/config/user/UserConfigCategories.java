@@ -287,6 +287,19 @@ public class UserConfigCategories {
                         .build()
                 )
                 .add(OptionImpl.createBuilder(boolean.class, sodiumOpts)
+                        .setName(new LiteralText("Use Model Instancing"))
+                        .setTooltip(new LiteralText("If enabled, supported models will be packed into VBOs and instanced. " +
+                                "This removes unnecessary uploads to the GPU by only sending transformations for existing vertices. " +
+                                "This also removes many unnecessary draw calls by packing many similar entities into batches. " +
+                                "This can drastically improve framerate when many entities are visible." +
+                                "\n\nRequires OpenGL 4.4 or ARB_shader_storage_buffer_object, ARB_shading_language_packing, and ARB_buffer_storage."))
+                        .setControl(TickBoxControl::new)
+                        .setImpact(OptionImpact.HIGH)
+                        .setEnabled(InstancedEntityRenderer.isSupported(SodiumRender.DEVICE))
+                        .setBinding((opts, value) -> opts.performance.useModelInstancing = value, opts -> opts.performance.useModelInstancing)
+                        .build()
+                )
+                .add(OptionImpl.createBuilder(boolean.class, sodiumOpts)
                         .setName(new TranslatableText("sodium.options.use_particle_culling.name"))
                         .setTooltip(new TranslatableText("sodium.options.use_particle_culling.tooltip"))
                         .setControl(TickBoxControl::new)
