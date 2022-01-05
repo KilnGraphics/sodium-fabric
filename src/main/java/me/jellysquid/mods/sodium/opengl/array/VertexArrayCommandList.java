@@ -15,4 +15,6 @@ public interface VertexArrayCommandList<T extends Enum<T>> {
     void multiDrawElementsBaseVertex(PointerBuffer pointer, IntBuffer count, IntBuffer baseVertex, IntType indexType, PrimitiveType primitiveType);
 
     void drawElementsBaseVertex(PrimitiveType primitiveType, IntType elementType, long elementPointer, int baseVertex, int elementCount);
+
+    void drawElementsInstanced(PrimitiveType primitiveType, IntType elementType, long elementPointer, int baseVertex, int elementCount);
 }

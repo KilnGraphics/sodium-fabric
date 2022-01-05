@@ -6,9 +6,8 @@ import me.jellysquid.mods.sodium.SodiumClientMod;
 import java.util.List;
 import java.util.Map;
 
-import me.jellysquid.mods.sodium.SodiumClientMod;
-import me.jellysquid.mods.sodium.SodiumRender;
 import me.jellysquid.mods.sodium.render.SodiumWorldRenderer;
+import me.jellysquid.mods.sodium.render.entity.DebugInfo;
 import me.jellysquid.mods.sodium.util.NativeBuffer;
 import net.minecraft.client.gui.hud.DebugHud;
 import net.minecraft.util.Formatting;
@@ -52,7 +51,7 @@ public abstract class MixinDebugHud {
             }
         }
 
-        if (SodiumClient.options().performance.useModelInstancing && InstancedEntityRenderer.isSupported(SodiumRender.DEVICE)) {
+        if (SodiumClientMod.options().performance.useModelInstancing) {
             strings.add("");
             strings.add("Model Info:");
 

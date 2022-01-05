@@ -7,15 +7,16 @@ import me.jellysquid.mods.sodium.interop.vanilla.buffer.VertexBufferAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.MultiPhaseAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.MultiPhaseParametersAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.RenderPhaseAccessor;
-import me.jellysquid.mods.sodium.interop.vanilla.model.VboBackedModel;
+import me.jellysquid.mods.sodium.interop.vanilla.model.BufferBackedModel;
 import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
+import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
 
 import java.io.Closeable;
 import java.util.*;
 
-public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map<VboBackedModel, InstanceBatch>>> {
+public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>>> {
 
     private static final int INITIAL_BATCH_CAPACITY = 16;
 
@@ -25,27 +26,23 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
      */
     public static final boolean TRANSPARENCY_SLICING = true;
 
-    private final Map<RenderLayer, Map<VboBackedModel, InstanceBatch>> opaqueSection;
+    private final Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> opaqueSection;
     /**
      * Each map in the deque represents a separate ordered section, which is required for transparency ordering.
      * For each model in the map, it has its own map where each RenderLayer has a list of instances. This is
      * because we can only batch instances with the same RenderLayer and model.
      */
-    private final Deque<Map<RenderLayer, Map<VboBackedModel, InstanceBatch>>> orderedTransparencySections;
+    private final Deque<Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>>> orderedTransparencySections;
 
     private final Set<AutoCloseable> closeables;
     private final Deque<InstanceBatch> batchPool;
 
-    private final SectionedPersistentBuffer modelPersistentSsbo;
-    private final SectionedPersistentBuffer partPersistentSsbo;
-    private final SectionedPersistentBuffer translucencyPersistentEbo;
+    private final StreamingBuffer partBuffer;
 
     private RenderPhase.Transparency previousTransparency;
 
-    public ModelBakingData(SectionedPersistentBuffer modelPersistentSsbo, SectionedPersistentBuffer partPersistentSsbo, SectionedPersistentBuffer translucencyPersistentEbo) {
-        this.modelPersistentSsbo = modelPersistentSsbo;
-        this.partPersistentSsbo = partPersistentSsbo;
-        this.translucencyPersistentEbo = translucencyPersistentEbo;
+    public ModelBakingData(StreamingBuffer partBuffer) {
+        this.partBuffer = partBuffer;
         opaqueSection = new LinkedHashMap<>();
         orderedTransparencySections = new ArrayDeque<>(64);
         closeables = new ObjectOpenHashSet<>();
@@ -53,8 +50,8 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
     }
 
     @SuppressWarnings("ConstantConditions")
-    public InstanceBatch getOrCreateInstanceBatch(RenderLayer renderLayer, VboBackedModel model) {
-        Map<RenderLayer, Map<VboBackedModel, InstanceBatch>> renderSection;
+    public InstanceBatch getOrCreateInstanceBatch(RenderLayer renderLayer, BufferBackedModel model) {
+        Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> renderSection;
         // we still use linked maps in here to try to preserve patterns for things that rely on rendering in order not based on transparency.
         MultiPhaseParametersAccessor multiPhaseParameters = (MultiPhaseParametersAccessor) (Object) ((MultiPhaseAccessor) renderLayer).getPhases();
         RenderPhase.Transparency currentTransparency = multiPhaseParameters.getTransparency();
@@ -80,10 +77,10 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
                 .computeIfAbsent(model, model1 -> {
                     InstanceBatch recycledBatch = batchPool.pollFirst();
                     if (recycledBatch != null) {
-                        recycledBatch.reset(model1, requiresIndexing(multiPhaseParameters), partPersistentSsbo);
+                        recycledBatch.reset(model1, requiresIndexing(multiPhaseParameters), partBuffer);
                         return recycledBatch;
                     } else {
-                        return new InstanceBatch(model1, requiresIndexing(multiPhaseParameters), INITIAL_BATCH_CAPACITY, partPersistentSsbo);
+                        return new InstanceBatch(model1, requiresIndexing(multiPhaseParameters), INITIAL_BATCH_CAPACITY, partBuffer);
                     }
                 });
     }
@@ -96,11 +93,11 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
         orderedTransparencySections.add(new LinkedHashMap<>());
     }
 
-    private void writeSplitData(Map<RenderLayer, Map<VboBackedModel, InstanceBatch>> splitData) {
-        for (Map<VboBackedModel, InstanceBatch> perRenderLayerData : splitData.values()) {
-            for (Map.Entry<VboBackedModel, InstanceBatch> perModelData : perRenderLayerData.entrySet()) {
+    private void writeSplitData(Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> splitData) {
+        for (Map<BufferBackedModel, InstanceBatch> perRenderLayerData : splitData.values()) {
+            for (Map.Entry<BufferBackedModel, InstanceBatch> perModelData : perRenderLayerData.entrySet()) {
                 InstanceBatch instanceBatch = perModelData.getValue();
-                VertexBufferAccessor vertexBufferAccessor = (VertexBufferAccessor) perModelData.getKey().getBakedVertices();
+                VertexBufferAccessor vertexBufferAccessor = (VertexBufferAccessor) perModelData.getKey().getVertexBuffer();
                 instanceBatch.writeInstancesToBuffer(modelPersistentSsbo);
                 instanceBatch.writeIndicesToBuffer(vertexBufferAccessor.getDrawMode(), translucencyPersistentEbo);
             }
@@ -110,7 +107,7 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
     public void writeData() {
         writeSplitData(opaqueSection);
 
-        for (Map<RenderLayer, Map<VboBackedModel, InstanceBatch>> transparencySection : orderedTransparencySections) {
+        for (Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> transparencySection : orderedTransparencySections) {
             writeSplitData(transparencySection);
         }
     }
@@ -119,7 +116,7 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
         closeables.add(closeable);
     }
 
-    public Iterator<Map<RenderLayer, Map<VboBackedModel, InstanceBatch>>> iterator() {
+    public Iterator<Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>>> iterator() {
         return Iterators.concat(Iterators.singletonIterator(opaqueSection), orderedTransparencySections.iterator());
     }
 
@@ -129,8 +126,8 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
 
     @SuppressWarnings("unused")
     public boolean isEmptyDeep() {
-        for (Map<RenderLayer, Map<VboBackedModel, InstanceBatch>> perOrderedSectionData : this) {
-            for (Map<VboBackedModel, InstanceBatch> perRenderLayerData : perOrderedSectionData.values()) {
+        for (Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> perOrderedSectionData : this) {
+            for (Map<BufferBackedModel, InstanceBatch> perRenderLayerData : perOrderedSectionData.values()) {
                 for (InstanceBatch instanceBatch : perRenderLayerData.values()) {
                     if (instanceBatch.size() > 0) {
                         return false;

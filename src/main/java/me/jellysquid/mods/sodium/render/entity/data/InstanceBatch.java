@@ -4,8 +4,9 @@ import it.unimi.dsi.fastutil.ints.IntArrays;
 
 import java.util.List;
 
-import me.jellysquid.mods.sodium.interop.vanilla.model.VboBackedModel;
+import me.jellysquid.mods.sodium.interop.vanilla.model.BufferBackedModel;
 import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
+import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.util.math.MatrixStack;
@@ -19,15 +20,15 @@ public class InstanceBatch {
     private final List<PerInstanceData> instances;
     private final MatrixEntryList matrices;
 
-    private VboBackedModel model;
+    private BufferBackedModel model;
     private boolean indexed;
-    private SectionedPersistentBuffer partBuffer;
+    private StreamingBuffer partBuffer;
 
     private VertexFormat.IntType indexType;
     private long indexStartingPos;
     private int indexCount;
 
-    public InstanceBatch(VboBackedModel model, boolean indexed, int initialSize, SectionedPersistentBuffer partBuffer) {
+    public InstanceBatch(BufferBackedModel model, boolean indexed, int initialSize, StreamingBuffer partBuffer) {
         this.instances = new ArrayList<>(initialSize);
         this.matrices = new MatrixEntryList(initialSize);
         this.model = model;
@@ -35,7 +36,7 @@ public class InstanceBatch {
         this.partBuffer = partBuffer;
     }
 
-    public void reset(VboBackedModel model, boolean indexed, SectionedPersistentBuffer partBuffer) {
+    public void reset(BufferBackedModel model, boolean indexed, StreamingBuffer partBuffer) {
         this.model = model;
         this.indexed = indexed;
         this.partBuffer = partBuffer;
@@ -85,11 +86,11 @@ public class InstanceBatch {
             for (int partId = 0; partId < partIds; partId++) {
                 Matrix4f mv;
                 if (!matrices.getElementWritten(partId)) {
-                    mv = baseMatrixEntry.getModel();
+                    mv = baseMatrixEntry.getPositionMatrix();
                 } else {
                     MatrixStack.Entry entry = matrices.get(partId);
                     if (entry != null) {
-                        mv = entry.getModel();
+                        mv = entry.getPositionMatrix();
                     } else {
                         // skip empty part
                         continue;

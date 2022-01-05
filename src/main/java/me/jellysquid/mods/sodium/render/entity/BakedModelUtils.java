@@ -27,7 +27,7 @@ public class BakedModelUtils {
         return MODEL_VBO_BUFFER_BUILDER;
     }
 
-    public static InstancedEntityRenderer getInstancedRenderDispatcher() {
+    public static InstancedEntityRenderer getEntityRenderer() {
         if (INSTANCED_RENDER_DISPATCHER == null) {
             INSTANCED_RENDER_DISPATCHER = new InstancedEntityRenderer();
         }
@@ -36,7 +36,7 @@ public class BakedModelUtils {
 
     public static ModelBakingData getBakingData() {
         if (BAKING_DATA == null) {
-            InstancedEntityRenderer instancedRenderDispatcher = getInstancedRenderDispatcher();
+            InstancedEntityRenderer instancedRenderDispatcher = getEntityRenderer();
             BAKING_DATA = new ModelBakingData(instancedRenderDispatcher.modelPersistentSsbo, instancedRenderDispatcher.partPersistentSsbo, instancedRenderDispatcher.translucencyPersistentEbo);
         }
         return BAKING_DATA;

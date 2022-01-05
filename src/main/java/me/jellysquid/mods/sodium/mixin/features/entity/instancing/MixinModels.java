@@ -11,7 +11,8 @@ import me.jellysquid.mods.sodium.SodiumRender;
 import me.jellysquid.mods.sodium.interop.vanilla.consumer.ModelVboBufferBuilder;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.BufferBuilderExtended;
 import me.jellysquid.mods.sodium.interop.vanilla.math.matrix.MatrixStackExtended;
-import me.jellysquid.mods.sodium.interop.vanilla.model.VboBackedModel;
+import me.jellysquid.mods.sodium.interop.vanilla.model.BufferBackedModel;
+import me.jellysquid.mods.sodium.opengl.array.VertexArray;
 import me.jellysquid.mods.sodium.render.entity.BakedModelRenderLayerManager;
 import me.jellysquid.mods.sodium.render.entity.BakedModelUtils;
 import me.jellysquid.mods.sodium.render.entity.data.InstanceBatch;
@@ -50,15 +51,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
         TridentEntityModel.class, // FIXME: enchantment glint uses dual
         TurtleEntityModel.class
 })
-public class MixinModels implements VboBackedModel {
+public class MixinModels implements BufferBackedModel {
 
     @Unique
     @Nullable
-    private Tessellation bmm$bakedVertices;
+    private VertexArray bmm$bakedVertices;
 
     @Override
     @Unique
-    public Tessellation getBakedVertices() {
+    public Tessellation getVertexBuffer() {
         return bmm$bakedVertices;
     }
 
@@ -128,7 +129,7 @@ public class MixinModels implements VboBackedModel {
 
     @ModifyVariable(method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V", at = @At("HEAD"), argsOnly = true)
     private VertexConsumer changeVertexConsumer(VertexConsumer existingConsumer) {
-        if (getBakedVertices() != null && bmm$currentPassBakeable) {
+        if (getVertexBuffer() != null && bmm$currentPassBakeable) {
             return null;
         } else if (bmm$currentPassBakeable) {
             ModelVboBufferBuilder modelVboBufferBuilder = BakedModelUtils.getModelVboBufferBuilder();
@@ -141,14 +142,14 @@ public class MixinModels implements VboBackedModel {
 
     @Inject(method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V", at = @At("TAIL"))
     private void createVbo(MatrixStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha, CallbackInfo ci) {
-        if (getBakedVertices() == null && bmm$currentPassBakeable) {
+        if (getVertexBuffer() == null && bmm$currentPassBakeable) {
             ModelVboBufferBuilder modelVboBufferBuilder = BakedModelUtils.getModelVboBufferBuilder();
             bmm$vertexCount = modelVboBufferBuilder.getVertexCount();
             modelVboBufferBuilder.end();
             bmm$primitivePositions = modelVboBufferBuilder.getPrimitivePositions();
             bmm$primitivePartIds = modelVboBufferBuilder.getPrimitivePartIds();
             bmm$bakedVertices = new VertexBuffer();
-            getBakedVertices().upload(modelVboBufferBuilder.getInternalBufferBuilder());
+            getVertexBuffer().upload(modelVboBufferBuilder.getInternalBufferBuilder());
             BakedModelUtils.getBakingData().addCloseable(bmm$bakedVertices);
             modelVboBufferBuilder.clear();
         }

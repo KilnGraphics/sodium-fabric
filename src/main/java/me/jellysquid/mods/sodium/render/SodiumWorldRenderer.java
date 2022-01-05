@@ -12,6 +12,7 @@ import me.jellysquid.mods.sodium.render.chunk.draw.ChunkRenderMatrices;
 import me.jellysquid.mods.sodium.render.chunk.passes.ChunkRenderPass;
 import me.jellysquid.mods.sodium.render.chunk.passes.ChunkRenderPassManager;
 import me.jellysquid.mods.sodium.render.chunk.state.ChunkRenderData;
+import me.jellysquid.mods.sodium.render.entity.renderer.EntityRenderer;
 import me.jellysquid.mods.sodium.render.terrain.context.ImmediateTerrainRenderCache;
 import me.jellysquid.mods.sodium.util.ListUtil;
 import me.jellysquid.mods.sodium.util.NativeBuffer;
@@ -55,6 +56,7 @@ public class SodiumWorldRenderer {
     private RenderSectionManager renderSectionManager;
     private ChunkRenderPassManager renderPassManager;
     private ChunkTracker chunkTracker;
+    private EntityRenderer entityRenderer;
 
     /**
      * @return The SodiumWorldRenderer based on the current dimension

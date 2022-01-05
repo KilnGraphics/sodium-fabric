@@ -2,13 +2,14 @@ package me.jellysquid.mods.sodium.render.entity.data;
 
 import me.jellysquid.mods.sodium.render.entity.BakedModelUtils;
 import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
+import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import org.lwjgl.system.MemoryUtil;
 
 public record PerInstanceData(long partArrayIndex, float red, float green, float blue, float alpha, int overlayX,
                               int overlayY, int lightX, int lightY, int[] primitiveIndices, int skippedPrimitivesStart,
                               int skippedPrimitivesEnd) {
 
-    public void writeToBuffer(SectionedPersistentBuffer buffer) {
+    public void writeToBuffer(StreamingBuffer buffer) {
         long positionOffset = buffer.getPositionOffset().getAndAdd(BakedModelUtils.MODEL_STRUCT_SIZE);
         long pointer = buffer.getSectionedPointer() + positionOffset;
         MemoryUtil.memPutFloat(pointer, red);

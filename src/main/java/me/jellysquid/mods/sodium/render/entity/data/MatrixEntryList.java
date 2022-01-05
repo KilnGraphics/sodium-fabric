@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import me.jellysquid.mods.sodium.render.entity.BakedModelUtils;
 import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
+import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
@@ -93,8 +94,9 @@ public class MatrixEntryList {
      * @param buffer the buffer to write to
      * @return the part index to be given to the struct of the model
      */
-    public long writeToBuffer(SectionedPersistentBuffer buffer, MatrixStack.Entry baseMatrixEntry) {
+    public long writeToBuffer(StreamingBuffer buffer, MatrixStack.Entry baseMatrixEntry) {
         int matrixCount = getLargestPartId() + 1;
+        buffer.write()
         long positionOffset = buffer.getPositionOffset().getAndAdd(matrixCount * BakedModelUtils.PART_STRUCT_SIZE);
         long pointer = buffer.getSectionedPointer() + positionOffset;
 
