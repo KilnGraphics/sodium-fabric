@@ -1,6 +1,5 @@
 package me.jellysquid.mods.sodium.render.terrain;
 
-import me.jellysquid.mods.sodium.render.chunk.compile.buffers.IndexBufferBuilder;
 import me.jellysquid.mods.sodium.render.terrain.light.LightMode;
 import me.jellysquid.mods.sodium.render.terrain.light.LightPipeline;
 import me.jellysquid.mods.sodium.render.terrain.light.LightPipelineProvider;
@@ -92,10 +91,8 @@ public class BlockRenderer {
                                 ChunkMeshBuilder buffers, List<BakedQuad> quads, ChunkMeshFace facing) {
         ColorSampler<BlockState> colorizer = null;
 
-        TerrainVertexSink vertices = buffers.getVertexSink();
+        TerrainVertexSink vertices = buffers.getVertexSink(facing);
         vertices.ensureCapacity(quads.size() * 4);
-
-        IndexBufferBuilder indices = buffers.getIndexBufferBuilder(facing);
 
         // This is a very hot allocation, iterate over it manually
         // noinspection ForLoopReplaceableByForEach
@@ -109,13 +106,13 @@ public class BlockRenderer {
                 colorizer = this.blockColors.getColorProvider(state);
             }
 
-            this.renderQuad(world, state, pos, origin, vertices, indices, offset, colorizer, quad, light, buffers);
+            this.renderQuad(world, state, pos, origin, vertices, offset, colorizer, quad, light, buffers);
         }
 
         vertices.flush();
     }
 
-    private void renderQuad(BlockRenderView world, BlockState state, BlockPos pos, BlockPos origin, TerrainVertexSink vertices, IndexBufferBuilder indices, Vec3d blockOffset,
+    private void renderQuad(BlockRenderView world, BlockState state, BlockPos pos, BlockPos origin, TerrainVertexSink vertices, Vec3d blockOffset,
                             ColorSampler<BlockState> colorSampler, BakedQuad bakedQuad, QuadLightData light, ChunkMeshBuilder model) {
         ModelQuadView src = (ModelQuadView) bakedQuad;
         ModelQuadOrientation orientation = ModelQuadOrientation.orientByBrightness(light.br);
@@ -125,9 +122,7 @@ public class BlockRenderer {
         if (bakedQuad.hasColor()) {
             colors = this.colorBlender.getColors(world, pos, src, colorSampler, state);
         }
-
-        int vertexStart = vertices.getVertexCount();
-
+        
         for (int i = 0; i < 4; i++) {
             int j = orientation.getVertexIndex(i);
 
@@ -142,10 +137,8 @@ public class BlockRenderer {
 
             int lm = light.lm[j];
 
-            vertices.writeVertex(origin, x, y, z, color, u, v, lm, model.getChunkId());
+            vertices.writeVertex(origin, x, y, z, color, u, v, lm);
         }
-
-        indices.add(vertexStart, ModelQuadWinding.CLOCKWISE);
 
         Sprite sprite = src.getSprite();
 
