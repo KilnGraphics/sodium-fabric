@@ -2,8 +2,9 @@ package me.jellysquid.mods.sodium.opengl.shader;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import me.jellysquid.mods.sodium.opengl.ManagedObject;
+import me.jellysquid.mods.sodium.opengl.shader.data.BlockType;
+import me.jellysquid.mods.sodium.opengl.shader.data.DataBlock;
 import me.jellysquid.mods.sodium.opengl.shader.uniform.Uniform;
-import me.jellysquid.mods.sodium.opengl.shader.uniform.UniformBlock;
 import me.jellysquid.mods.sodium.opengl.shader.uniform.UniformFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -143,7 +144,7 @@ public class ProgramImpl<T> extends ManagedObject implements Program<T> {
         }
 
         @Override
-        public UniformBlock bindUniformBlock(String name, int bindingPoint) {
+        public DataBlock bindUniformBlock(String name, int bindingPoint) {
             this.checkDisposed();
 
             if (this.boundUniformBlocks.contains(name)) {
@@ -160,7 +161,7 @@ public class ProgramImpl<T> extends ManagedObject implements Program<T> {
 
             this.boundUniformBlocks.add(name);
 
-            return new UniformBlock(bindingPoint);
+            return new DataBlock(BlockType.UNIFORM, bindingPoint);
         }
 
         private void checkDisposed() {
