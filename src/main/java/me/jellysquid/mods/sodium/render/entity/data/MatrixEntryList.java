@@ -3,7 +3,6 @@ package me.jellysquid.mods.sodium.render.entity.data;
 import java.util.Arrays;
 
 import me.jellysquid.mods.sodium.render.entity.BakedModelUtils;
-import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
 import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix3f;
@@ -91,14 +90,11 @@ public class MatrixEntryList {
      * Writes the contents of this list to a buffer, with null entries represented
      * as a stream of 0s, and unwritten elements represented as the base entry.
      *
-     * @param buffer the buffer to write to
-     * @return the part index to be given to the struct of the model
+     * @param writer the writer to provide the pointer
      */
-    public long writeToBuffer(StreamingBuffer buffer, MatrixStack.Entry baseMatrixEntry) {
+    public void write(StreamingBuffer.Writer writer, MatrixStack.Entry baseMatrixEntry) {
         int matrixCount = getLargestPartId() + 1;
-        buffer.write()
-        long positionOffset = buffer.getPositionOffset().getAndAdd(matrixCount * BakedModelUtils.PART_STRUCT_SIZE);
-        long pointer = buffer.getSectionedPointer() + positionOffset;
+        long pointer = writer.next((int) (matrixCount * BakedModelUtils.PART_STRUCT_SIZE));
 
         for (int idx = 0; idx < elementArray.length; idx++) {
             if (elementWrittenArray[idx]) {
@@ -112,12 +108,10 @@ public class MatrixEntryList {
                 writeMatrixEntry(pointer + idx * BakedModelUtils.PART_STRUCT_SIZE, baseMatrixEntry);
             }
         }
-
-        return positionOffset / BakedModelUtils.PART_STRUCT_SIZE;
     }
 
     private static void writeMatrixEntry(long pointer, MatrixStack.Entry matrixEntry) {
-        Matrix4f model = matrixEntry.getModel();
+        Matrix4f model = matrixEntry.getPositionMatrix();
         MemoryUtil.memPutFloat(pointer, model.a00);
         MemoryUtil.memPutFloat(pointer + 4, model.a10);
         MemoryUtil.memPutFloat(pointer + 8, model.a20);
@@ -135,7 +129,7 @@ public class MatrixEntryList {
         MemoryUtil.memPutFloat(pointer + 56, model.a23);
         MemoryUtil.memPutFloat(pointer + 60, model.a33);
 
-        Matrix3f normal = matrixEntry.getNormal();
+        Matrix3f normal = matrixEntry.getNormalMatrix();
         MemoryUtil.memPutFloat(pointer + 64, normal.a00);
         MemoryUtil.memPutFloat(pointer + 68, normal.a10);
         MemoryUtil.memPutFloat(pointer + 72, normal.a20);

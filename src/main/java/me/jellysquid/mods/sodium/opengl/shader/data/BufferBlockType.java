@@ -2,7 +2,7 @@ package me.jellysquid.mods.sodium.opengl.shader.data;
 
 import org.lwjgl.opengl.*;
 
-public enum BlockType {
+public enum BufferBlockType {
     UNIFORM(GL31C.GL_UNIFORM_BUFFER),
     SHADER_STORAGE(GL43C.GL_SHADER_STORAGE_BUFFER),
     ATOMIC_COUNTER(GL42C.GL_ATOMIC_COUNTER_BUFFER),
@@ -10,7 +10,7 @@ public enum BlockType {
     
     public final int id;
     
-    BlockType(int id) {
+    BufferBlockType(int id) {
         this.id = id;
     }
 }

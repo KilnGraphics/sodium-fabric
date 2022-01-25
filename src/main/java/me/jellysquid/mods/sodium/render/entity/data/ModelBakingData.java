@@ -8,7 +8,6 @@ import me.jellysquid.mods.sodium.interop.vanilla.layer.MultiPhaseAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.MultiPhaseParametersAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.RenderPhaseAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.model.BufferBackedModel;
-import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
 import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
@@ -93,13 +92,13 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
         orderedTransparencySections.add(new LinkedHashMap<>());
     }
 
-    private void writeSplitData(Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> splitData) {
+    private void writeSplitData(Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> splitData, StreamingBuffer modelBuffer, StreamingBuffer translucentElementBuffer) {
         for (Map<BufferBackedModel, InstanceBatch> perRenderLayerData : splitData.values()) {
             for (Map.Entry<BufferBackedModel, InstanceBatch> perModelData : perRenderLayerData.entrySet()) {
                 InstanceBatch instanceBatch = perModelData.getValue();
                 VertexBufferAccessor vertexBufferAccessor = (VertexBufferAccessor) perModelData.getKey().getVertexBuffer();
-                instanceBatch.writeInstancesToBuffer(modelPersistentSsbo);
-                instanceBatch.writeIndicesToBuffer(vertexBufferAccessor.getDrawMode(), translucencyPersistentEbo);
+                instanceBatch.writeInstancesToBuffer(modelBuffer);
+                instanceBatch.writeElements(vertexBufferAccessor.getDrawMode(), translucentElementBuffer);
             }
         }
     }

@@ -38,5 +38,13 @@ public enum IntType {
         return this.size;
     }
 
+    public static IntType getSmallestTypeFor(int number) {
+        if ((number & 0xFFFF0000) != 0) {
+            return UNSIGNED_INT;
+        } else {
+            return (number & 0xFF00) != 0 ? UNSIGNED_SHORT : UNSIGNED_BYTE;
+        }
+    }
+
     public static final IntType[] VALUES = IntType.values();
 }

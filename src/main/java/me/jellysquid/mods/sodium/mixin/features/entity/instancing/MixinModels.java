@@ -1,13 +1,6 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- */
-
 package me.jellysquid.mods.sodium.mixin.features.entity.instancing;
 
-import me.jellysquid.mods.sodium.SodiumClient;
-import me.jellysquid.mods.sodium.SodiumRender;
+import me.jellysquid.mods.sodium.SodiumClientMod;
 import me.jellysquid.mods.sodium.interop.vanilla.consumer.ModelVboBufferBuilder;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.BufferBuilderExtended;
 import me.jellysquid.mods.sodium.interop.vanilla.math.matrix.MatrixStackExtended;
@@ -17,7 +10,6 @@ import me.jellysquid.mods.sodium.render.entity.BakedModelRenderLayerManager;
 import me.jellysquid.mods.sodium.render.entity.BakedModelUtils;
 import me.jellysquid.mods.sodium.render.entity.data.InstanceBatch;
 import me.jellysquid.mods.sodium.render.entity.renderer.InstancedEntityRenderer;
-import me.jellysquid.mods.thingl.tessellation.Tessellation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.RenderLayer;
@@ -109,8 +101,7 @@ public class MixinModels implements BufferBackedModel {
 
     @Inject(method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V", at = @At("HEAD"))
     private void updateCurrentPass(MatrixStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha, CallbackInfo ci) {
-        if (SodiumClient.options().performance.useModelInstancing &&
-                InstancedEntityRenderer.isSupported(SodiumRender.DEVICE) &&
+        if (SodiumClientMod.options().performance.useModelInstancing &&
                 !bmm$childBakeable() &&
                 BakedModelUtils.getNestedBufferBuilder(vertexConsumer) instanceof BufferBuilderExtended bufferBuilderExtended) {
             RenderLayer convertedRenderLayer = BakedModelRenderLayerManager.tryDeriveSmartRenderLayer(bufferBuilderExtended.getRenderLayer());

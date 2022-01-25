@@ -9,6 +9,7 @@ import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexFormat;
 
+// TODO: move this to a QuadVertexSink wrapper, only support quads
 public class ModelVboBufferBuilder implements VertexConsumer {
     private final BufferBuilder internalBufferBuilder;
     private final FloatList primitivePositions;

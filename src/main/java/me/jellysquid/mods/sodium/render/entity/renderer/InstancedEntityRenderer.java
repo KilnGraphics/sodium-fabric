@@ -2,13 +2,10 @@ package me.jellysquid.mods.sodium.render.entity.renderer;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.jellysquid.mods.sodium.SodiumClientMod;
 import me.jellysquid.mods.sodium.interop.vanilla.buffer.VertexBufferAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.model.BufferBackedModel;
 import me.jellysquid.mods.sodium.opengl.device.RenderDevice;
 import me.jellysquid.mods.sodium.render.entity.DebugInfo;
-import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
-import me.jellysquid.mods.sodium.render.entity.buffer.SectionedSyncObjects;
 import me.jellysquid.mods.sodium.render.entity.data.ModelBakingData;
 import me.jellysquid.mods.sodium.render.entity.data.InstanceBatch;
 import me.jellysquid.mods.sodium.render.stream.MappedStreamingBuffer;
@@ -25,7 +22,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.util.Map;
 
-public class InstancedEntityRenderer implements EntityRenderer {
+public class  InstancedEntityRenderer implements EntityRenderer {
 
     public static final int BUFFER_CREATION_FLAGS = GL30C.GL_MAP_WRITE_BIT | ARBBufferStorage.GL_MAP_PERSISTENT_BIT;
     public static final int BUFFER_MAP_FLAGS = GL30C.GL_MAP_WRITE_BIT | GL30C.GL_MAP_FLUSH_EXPLICIT_BIT | ARBBufferStorage.GL_MAP_PERSISTENT_BIT;
@@ -245,7 +242,7 @@ public class InstancedEntityRenderer implements EntityRenderer {
         RenderSystem.setupShaderLights(shader);
         shader.upload(); // should be bind
         VertexFormat.DrawMode drawMode = vba.getDrawMode();
-        VertexFormat.IntType indexType = batch.getIndexType();
+        VertexFormat.IntType indexType = batch.getElementType();
         GL11.glDrawElements(drawMode.mode, batch.getIndexCount(), indexType.count, sectionStartPos + batch.getIndexStartingPos());
         shader.bind(); // should be unbind
 

@@ -5,7 +5,9 @@ import it.unimi.dsi.fastutil.ints.IntArrays;
 import java.util.List;
 
 import me.jellysquid.mods.sodium.interop.vanilla.model.BufferBackedModel;
-import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
+import me.jellysquid.mods.sodium.opengl.types.IntType;
+import me.jellysquid.mods.sodium.opengl.types.PrimitiveType;
+import me.jellysquid.mods.sodium.render.sequence.SequenceBuilder;
 import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexFormat;
@@ -24,7 +26,7 @@ public class InstanceBatch {
     private boolean indexed;
     private StreamingBuffer partBuffer;
 
-    private VertexFormat.IntType indexType;
+    private IntType elementType;
     private long indexStartingPos;
     private int indexCount;
 
@@ -44,7 +46,7 @@ public class InstanceBatch {
         instances.clear();
         matrices.clear();
 
-        indexType = null;
+        elementType = null;
         indexStartingPos = 0;
         indexCount = 0;
     }
@@ -57,7 +59,7 @@ public class InstanceBatch {
         return matrices;
     }
 
-    public void writeInstancesToBuffer(SectionedPersistentBuffer buffer) {
+    public void writeInstancesToBuffer(StreamingBuffer buffer) {
         for (PerInstanceData perInstanceData : instances) {
             perInstanceData.writeToBuffer(buffer);
         }
@@ -66,13 +68,13 @@ public class InstanceBatch {
     public void addInstance(MatrixStack.Entry baseMatrixEntry, float red, float green, float blue, float alpha, int overlay, int light) {
         int overlayX = overlay & 0xFFFF;
         int overlayY = overlay >> 16 & 0xFFFF;
-        int lightX = light & (LightmapTextureManager.field_32769 | 0xFF0F);
-        int lightY = light >> 16 & (LightmapTextureManager.field_32769 | 0xFF0F);
+        int lightX = light & (LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE | 0xFF0F);
+        int lightY = light >> 16 & (LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE | 0xFF0F);
 
         // this can happen if the model didn't render any modelparts,
         // in which case it makes sense to not try to render it anyway.
         if (matrices.isEmpty()) return;
-        long partIndex = matrices.writeToBuffer(partBuffer, baseMatrixEntry);
+        long partIndex = matrices.write(partBuffer, baseMatrixEntry); // FIXME: just move this to the end and don't worry about async for now (maybe)
 
         int[] primitiveIndices = null;
         int skippedPrimitivesStart = 0;
@@ -161,19 +163,19 @@ public class InstanceBatch {
         return instances.size();
     }
 
-    public void writeIndicesToBuffer(VertexFormat.DrawMode drawMode, SectionedPersistentBuffer buffer) {
+    public void writeElements(PrimitiveType drawMode, StreamingBuffer buffer) {
         if (!isIndexed()) return;
 
         // this is pretty slow
         indexCount = drawMode.getSize(drawMode.vertexCount * instances.stream().mapToInt(p -> p.primitiveIndices().length - p.skippedPrimitivesStart() - p.skippedPrimitivesEnd()).sum());
-        indexType = VertexFormat.IntType.getSmallestTypeFor(indexCount);
-        long sizeBytes = (long) indexCount * indexType.size;
+        elementType = IntType.getSmallestTypeFor(indexCount);
+        long sizeBytes = (long) indexCount * elementType.size;
         // add with alignment
         indexStartingPos = buffer.getPositionOffset().getAndAccumulate(sizeBytes, Long::sum);
         // sectioned pointer also has to be aligned
         long ptr = buffer.getSectionedPointer() + indexStartingPos;
 
-        IndexWriter indexWriter = getIndexFunction(indexType, drawMode);
+        SequenceBuilder sequenceBuilder = getIndexFunction(elementType, drawMode);
         int lastIndex = 0;
         for (PerInstanceData instanceData : instances) {
             int[] primitiveIndices = instanceData.primitiveIndices();
@@ -181,8 +183,8 @@ public class InstanceBatch {
             int skippedPrimitivesEnd = instanceData.skippedPrimitivesEnd();
             for (int i = skippedPrimitivesStart; i < primitiveIndices.length - skippedPrimitivesEnd; i++) {
                 int indexStart = lastIndex + primitiveIndices[i] * drawMode.vertexCount;
-                indexWriter.writeIndices(ptr, indexStart, drawMode.vertexCount);
-                ptr += (long) drawMode.getSize(drawMode.vertexCount) * indexType.size;
+                sequenceBuilder.writeIndices(ptr, indexStart, drawMode.vertexCount);
+                ptr += (long) drawMode.getSize(drawMode.vertexCount) * elementType.size;
             }
             // we want to include the skipped primitives because the index needs to be calculated to the corresponding instance
             lastIndex += primitiveIndices.length * drawMode.vertexCount;
@@ -191,8 +193,8 @@ public class InstanceBatch {
     }
 
     // The Cool Way(tm) to do index writing
-    private static IndexWriter getIndexFunction(VertexFormat.IntType indexType, VertexFormat.DrawMode drawMode) {
-        IndexWriter function;
+    private static SequenceBuilder getIndexFunction(IntType indexType, VertexFormat.DrawMode drawMode) {
+        SequenceBuilder function;
         switch (indexType) {
             case BYTE -> {
                 switch (drawMode) {
@@ -278,8 +280,8 @@ public class InstanceBatch {
         return indexStartingPos;
     }
 
-    public VertexFormat.IntType getIndexType() {
-        return indexType;
+    public IntType getElementType() {
+        return elementType;
     }
 
     public int getIndexCount() {

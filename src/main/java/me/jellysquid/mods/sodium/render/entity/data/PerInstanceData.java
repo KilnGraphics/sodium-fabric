@@ -1,7 +1,6 @@
 package me.jellysquid.mods.sodium.render.entity.data;
 
 import me.jellysquid.mods.sodium.render.entity.BakedModelUtils;
-import me.jellysquid.mods.sodium.render.entity.buffer.SectionedPersistentBuffer;
 import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import org.lwjgl.system.MemoryUtil;
 

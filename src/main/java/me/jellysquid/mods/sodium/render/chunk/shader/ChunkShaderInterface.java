@@ -2,7 +2,7 @@ package me.jellysquid.mods.sodium.render.chunk.shader;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.opengl.shader.ShaderBindingContext;
-import me.jellysquid.mods.sodium.opengl.shader.data.DataBlock;
+import me.jellysquid.mods.sodium.opengl.shader.data.BufferBlock;
 import me.jellysquid.mods.sodium.opengl.shader.uniform.*;
 
 /**
@@ -13,7 +13,7 @@ public class ChunkShaderInterface {
     public final UniformMatrix4 uniformProjectionMatrix;
     public final UniformMatrix4 uniformModelViewProjectionMatrix;
 
-    public final DataBlock bufferInstanceData;
+    public final BufferBlock bufferInstanceData;
 
     private final UniformFloatArray uFogColor;
     private final UniformFloat uFogStart;

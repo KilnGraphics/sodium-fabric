@@ -14,7 +14,6 @@ import me.jellysquid.mods.sodium.render.chunk.passes.ChunkRenderPass;
 import me.jellysquid.mods.sodium.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.render.chunk.shader.ChunkShaderInterface;
 import me.jellysquid.mods.sodium.render.chunk.state.UploadedChunkMesh;
-import me.jellysquid.mods.sodium.render.sequence.SequenceBuilder;
 import me.jellysquid.mods.sodium.render.sequence.SequenceIndexBuffer;
 import me.jellysquid.mods.sodium.render.stream.MappedStreamingBuffer;
 import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
