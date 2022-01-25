@@ -155,7 +155,6 @@ public class AsmSequenceBuilderFactory {
             methodVisitor.visitInsn(IADD);
         }
 
-        // this method returns the existing ByteBuffer, so we don't need to constantly keep loading it
         methodVisitor.visitMethodInsn(INVOKESTATIC, "org/lwjgl/system/MemoryUtil", "memPutInt", "(JI)V", false);
     }
 
@@ -169,6 +168,7 @@ public class AsmSequenceBuilderFactory {
             methodVisitor.visitInsn(IADD);
         }
 
+        // this method returns the existing ByteBuffer, so we don't need to constantly keep loading it
         methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/nio/ByteBuffer", "putInt", "(I)Ljava/nio/ByteBuffer;", false);
     }
 
