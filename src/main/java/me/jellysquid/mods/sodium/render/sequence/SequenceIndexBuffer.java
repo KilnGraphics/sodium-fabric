@@ -31,15 +31,15 @@ public class SequenceIndexBuffer {
 
         var verticesPerPrimitive = this.builder.getVerticesPerPrimitive();
         var indicesPerPrimitive = this.builder.getIndicesPerPrimitive();
+        var bytesPerElement = this.builder.getElementType().getSize();
 
         var primitiveCount = vertexCount / verticesPerPrimitive;
-        var bufferSize = (long) indicesPerPrimitive * primitiveCount * 4L;
+        var bufferSize = (long) indicesPerPrimitive * primitiveCount * bytesPerElement;
 
         this.buffer = this.device.createBuffer(bufferSize, (buffer) -> {
-            var intBuffer = buffer.asIntBuffer();
 
             for (int primitiveIndex = 0; primitiveIndex < primitiveCount; primitiveIndex++) {
-                this.builder.write(intBuffer, primitiveIndex * verticesPerPrimitive);
+                this.builder.write(buffer, primitiveIndex * verticesPerPrimitive);
             }
         });
 

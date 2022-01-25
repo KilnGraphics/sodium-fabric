@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import me.jellysquid.mods.sodium.interop.vanilla.mixin.ShaderTexture;
 import me.jellysquid.mods.sodium.interop.vanilla.mixin.ShaderTextureParameters;
-import me.jellysquid.mods.sodium.opengl.array.VertexArray;
 import me.jellysquid.mods.sodium.opengl.buffer.Buffer;
 import me.jellysquid.mods.sodium.opengl.device.RenderDevice;
 import me.jellysquid.mods.sodium.opengl.pipeline.Pipeline;
@@ -13,7 +12,8 @@ import me.jellysquid.mods.sodium.opengl.pipeline.PipelineState;
 import me.jellysquid.mods.sodium.opengl.sampler.Sampler;
 import me.jellysquid.mods.sodium.opengl.types.IntType;
 import me.jellysquid.mods.sodium.opengl.types.PrimitiveType;
-import me.jellysquid.mods.sodium.render.sequence.IndexSequenceType;
+import me.jellysquid.mods.sodium.render.sequence.SequenceBuilder;
+import me.jellysquid.mods.sodium.render.sequence.SequenceBuilders;
 import me.jellysquid.mods.sodium.render.sequence.SequenceIndexBuffer;
 import me.jellysquid.mods.sodium.render.stream.MappedStreamingBuffer;
 import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
@@ -31,7 +31,7 @@ public class RenderImmediate {
     private final StreamingBuffer vertexBuffer;
     private final StreamingBuffer elementBuffer;
 
-    private final Map<IndexSequenceType, SequenceIndexBuffer> defaultElementBuffers;
+    private final Map<SequenceBuilder, SequenceIndexBuffer> defaultElementBuffers;
     private final RenderDevice device;
 
     private final Map<ShaderTextureParameters, Sampler> samplers = new Object2ObjectOpenHashMap<>();
@@ -44,9 +44,9 @@ public class RenderImmediate {
         this.vertexBuffer = new MappedStreamingBuffer(device, 64 * 1024 * 1024);
         this.elementBuffer = new MappedStreamingBuffer(device, 8 * 1024 * 1024);
 
-        for (IndexSequenceType sequenceType : IndexSequenceType.values()) {
-            this.defaultElementBuffers.put(sequenceType, new SequenceIndexBuffer(device, sequenceType.builder));
-        }
+//        for (SequenceBuilders sequenceType : SequenceBuilders.values()) {
+//            this.defaultElementBuffers.put(sequenceType, new SequenceIndexBuffer(device, sequenceType));
+//        }
     }
 
     public void draw(Pipeline<VanillaShaderInterface, VanillaShaderInterface.BufferTarget> pipeline, ShaderTexture[] shaderTextures,
@@ -62,7 +62,7 @@ public class RenderImmediate {
         var vertexBufferHandle = this.vertexBuffer.write(vertexData);
 
         if (useDefaultElementBuffer) {
-            var sequenceBufferBuilder = this.defaultElementBuffers.get(IndexSequenceType.map(drawMode));
+            var sequenceBufferBuilder = this.defaultElementBuffers.computeIfAbsent(SequenceBuilders.map(drawMode, IntType.UNSIGNED_INT), sb -> new SequenceIndexBuffer(device, sb));
             sequenceBufferBuilder.ensureCapacity(vertexCount);
 
             this.draw(pipeline, shaderTextures, drawMode, vertexFormat,

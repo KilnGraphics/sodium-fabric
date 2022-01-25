@@ -15,12 +15,14 @@ import me.jellysquid.mods.sodium.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.render.chunk.shader.ChunkShaderInterface;
 import me.jellysquid.mods.sodium.render.chunk.state.UploadedChunkMesh;
 import me.jellysquid.mods.sodium.render.sequence.SequenceBuilder;
+import me.jellysquid.mods.sodium.render.sequence.SequenceBuilders;
 import me.jellysquid.mods.sodium.render.sequence.SequenceIndexBuffer;
 import me.jellysquid.mods.sodium.render.stream.MappedStreamingBuffer;
 import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
 import me.jellysquid.mods.sodium.render.terrain.format.TerrainVertexType;
 import me.jellysquid.mods.sodium.render.terrain.quad.properties.ChunkMeshFace;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.texture.TextureManager;
@@ -46,7 +48,7 @@ public class DefaultChunkRenderer extends ShaderChunkRenderer {
 
         this.commandBuffer = new MappedStreamingBuffer(device, 16 * 1024 * 1024);
         this.instanceDataBuffer = new MappedStreamingBuffer(device, 4 * 1024 * 1024);
-        this.indexBuffer = new SequenceIndexBuffer(device, SequenceBuilder.QUADS);
+        this.indexBuffer = new SequenceIndexBuffer(device, SequenceBuilders.map(VertexFormat.DrawMode.QUADS, IntType.UNSIGNED_INT));
     }
 
     @Override
