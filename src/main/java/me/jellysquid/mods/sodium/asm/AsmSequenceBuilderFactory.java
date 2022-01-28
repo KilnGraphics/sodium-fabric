@@ -2,15 +2,12 @@ package me.jellysquid.mods.sodium.asm;
 
 import me.jellysquid.mods.sodium.opengl.types.IntType;
 import me.jellysquid.mods.sodium.render.sequence.SequenceBuilder;
-import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 
-import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.security.CodeSource;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -21,31 +18,24 @@ public class AsmSequenceBuilderFactory {
      * as they are singletons. If this is called with the same parameters twice, it will
      * probably crash.
      */
-    public static SequenceBuilder generateSequenceBuilder(int[] pattern, IntType elementType) throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    public static SequenceBuilder generateSequenceBuilder(int[] pattern, IntType elementType) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        // we need to create the class in the current package because we don't have access to put it anywhere else.
+        String currentPackagePath = lookup.lookupClass().getPackageName().replace('.', '/') + '/';
+
         // create new raw class
-        RawClass rawClass = createSequenceClassBytes(pattern, elementType);
+        byte[] rawClassBytes = createSequenceClassBytes(pattern, elementType, currentPackagePath);
 
-        // load class into KnotClassLoader using defineClass and reflection
-        Class<?> knotInterface = Class.forName("net.fabricmc.loader.impl.launch.knot.KnotClassLoaderInterface");
-        Method defineClassMethod = knotInterface.getMethod("defineClassFwd", String.class, byte[].class, int.class, int.class, CodeSource.class);
-        defineClassMethod.setAccessible(true);
-        Class<?> generatedClass = (Class<?>) defineClassMethod.invoke(
-                FabricLauncherBase.getLauncher().getTargetClassLoader(),
-                rawClass.classPath.replace('/','.') + rawClass.className,
-                rawClass.bytes,
-                0,
-                rawClass.bytes.length,
-                null
-        );
+        // define class using MethodHandles
+        Class<?> generatedClass = lookup.defineClass(rawClassBytes);
 
-        // create instance of generated class using no-args constuctor
+        // create instance of generated class using no-args constructor0
+
         Constructor<?> noArgsConstructor = generatedClass.getConstructor();
         return (SequenceBuilder) noArgsConstructor.newInstance();
     }
 
-    private static RawClass createSequenceClassBytes(int[] pattern, IntType elementType) {
-
-        String classPath = "me/jellysquid/mods/sodium/render/sequence/generated/";
+    private static byte[] createSequenceClassBytes(int[] pattern, IntType elementType, String packagePath) {
         StringBuilder nameGenerator = new StringBuilder("GeneratedSequence");
         nameGenerator.append(elementType.name());
         for (int i : pattern) {
@@ -56,7 +46,7 @@ public class AsmSequenceBuilderFactory {
         ClassWriter classWriter = new ClassWriter(0);
         MethodVisitor methodVisitor;
 
-        classWriter.visit(V17, ACC_PUBLIC | ACC_SUPER, classPath + className, null, "java/lang/Object", new String[] { "me/jellysquid/mods/sodium/render/sequence/SequenceBuilder" });
+        classWriter.visit(V17, ACC_PUBLIC | ACC_SUPER, packagePath + className, null, "java/lang/Object", new String[] { "me/jellysquid/mods/sodium/render/sequence/SequenceBuilder" });
 
         //// Visit Basic Constructor
         methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -135,7 +125,7 @@ public class AsmSequenceBuilderFactory {
         methodVisitor.visitEnd();
         classWriter.visitEnd();
 
-        return new RawClass(className, classPath, classWriter.toByteArray());
+        return classWriter.toByteArray();
     }
 
     private static void visitPutDMA(MethodVisitor methodVisitor, long pointerOffset, int vertexOffset) {
@@ -208,5 +198,4 @@ public class AsmSequenceBuilderFactory {
         }
     }
 
-    private record RawClass(String className, String classPath, byte[] bytes) {}
 }
