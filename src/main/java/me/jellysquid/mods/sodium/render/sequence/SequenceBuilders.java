@@ -18,7 +18,7 @@ public class SequenceBuilders {
 
     private static final Map<SequenceDefinition, SequenceBuilder> VALUES = new Object2ReferenceOpenHashMap<>();
 
-    public static SequenceBuilder getOrCreate(int[] pattern, IntType elementType) {
+    public static SequenceBuilder getOrCreate(IntType elementType, int... pattern) {
         return VALUES.computeIfAbsent(new SequenceDefinition(pattern, elementType), sd -> {
             try {
                 return AsmSequenceBuilderFactory.generateSequenceBuilder(sd.pattern, sd.elementType);
@@ -29,11 +29,15 @@ public class SequenceBuilders {
         });
     }
 
+    private static final int[] QUADS_INDEX_SEQUENCE = new int[] { 0, 1, 2, 2, 3, 0 };
+    private static final int[] LINES_INDEX_SEQUENCE = new int[] { 0, 1, 2, 3, 2, 0 };
+
     public static SequenceBuilder map(VertexFormat.DrawMode drawMode, IntType elementType) {
         return switch (drawMode) {
-            case QUADS -> getOrCreate(new int[] { 0, 1, 2, 2, 3, 0 }, elementType);
-            case LINES -> getOrCreate(new int[] { 0, 1, 2, 3, 2, 0 }, elementType);
-            default -> getOrCreate(IntStream.range(0, drawMode.vertexCount - 1).toArray(), elementType);
+            case QUADS -> getOrCreate(elementType, QUADS_INDEX_SEQUENCE);
+            case LINES -> getOrCreate(elementType, LINES_INDEX_SEQUENCE);
+            // default topology has index sequences that count up from 0 to the amount of vertices they have
+            default -> getOrCreate(elementType, IntStream.range(0, drawMode.vertexCount - 1).toArray());
         };
     }
 

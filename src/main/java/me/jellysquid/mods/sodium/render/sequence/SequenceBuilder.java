@@ -1,9 +1,8 @@
 package me.jellysquid.mods.sodium.render.sequence;
 
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-
 import me.jellysquid.mods.sodium.opengl.types.IntType;
+
+import java.nio.ByteBuffer;
 
 public interface SequenceBuilder {
     void write(long pointer, int baseVertex);
