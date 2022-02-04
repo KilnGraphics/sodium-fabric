@@ -29,8 +29,7 @@ public class AsmSequenceBuilderFactory {
         // define class using MethodHandles
         Class<?> generatedClass = lookup.defineClass(rawClassBytes);
 
-        // create instance of generated class using no-args constructor0
-
+        // create instance of generated class using no-args constructor
         Constructor<?> noArgsConstructor = generatedClass.getConstructor();
         return (SequenceBuilder) noArgsConstructor.newInstance();
     }
@@ -100,7 +99,7 @@ public class AsmSequenceBuilderFactory {
                 maxVal = patternValue;
             }
         }
-        visitConstantInt(methodVisitor, maxVal - minVal + 1);
+        AsmUtil.visitConstantInt(methodVisitor, maxVal - minVal + 1);
 
         methodVisitor.visitInsn(IRETURN);
         methodVisitor.visitMaxs(1, 1);
@@ -110,7 +109,7 @@ public class AsmSequenceBuilderFactory {
         methodVisitor = classWriter.visitMethod(ACC_PUBLIC, "getIndicesPerPrimitive", "()I", null, null);
         methodVisitor.visitCode();
         // the amount of indices is the amount of entries in the array
-        visitConstantInt(methodVisitor, pattern.length);
+        AsmUtil.visitConstantInt(methodVisitor, pattern.length);
         methodVisitor.visitInsn(IRETURN);
         methodVisitor.visitMaxs(1, 1);
         methodVisitor.visitEnd();
@@ -133,7 +132,7 @@ public class AsmSequenceBuilderFactory {
         methodVisitor.visitVarInsn(LLOAD, 1);
         // no need to add 0
         if (pointerOffset != 0) {
-            visitConstantLong(methodVisitor, pointerOffset);
+            AsmUtil.visitConstantLong(methodVisitor, pointerOffset);
             methodVisitor.visitInsn(LADD);
         }
 
@@ -141,7 +140,7 @@ public class AsmSequenceBuilderFactory {
         methodVisitor.visitVarInsn(ILOAD, 3);
         // no need to add 0
         if (vertexOffset != 0) {
-            visitConstantInt(methodVisitor, vertexOffset);
+            AsmUtil.visitConstantInt(methodVisitor, vertexOffset);
             methodVisitor.visitInsn(IADD);
         }
 
@@ -154,48 +153,12 @@ public class AsmSequenceBuilderFactory {
         methodVisitor.visitVarInsn(ILOAD, 2);
         // no need to add 0
         if (vertexOffset != 0) {
-            visitConstantInt(methodVisitor, vertexOffset);
+            AsmUtil.visitConstantInt(methodVisitor, vertexOffset);
             methodVisitor.visitInsn(IADD);
         }
 
         // this method returns the existing ByteBuffer, so we don't need to constantly keep loading it
         methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/nio/ByteBuffer", "putInt", "(I)Ljava/nio/ByteBuffer;", false);
-    }
-
-    /*
-     * Helper methods to create smaller constant instructions.
-     * Will the bytecode be JIT'd to the same end result? Probably. Do I care? No.
-     */
-
-    private static void visitConstantInt(MethodVisitor methodVisitor, int addend) {
-        switch (addend) {
-            case -1 -> methodVisitor.visitInsn(ICONST_M1);
-            case 0 -> methodVisitor.visitInsn(ICONST_0);
-            case 1 -> methodVisitor.visitInsn(ICONST_1);
-            case 2 -> methodVisitor.visitInsn(ICONST_2);
-            case 3 -> methodVisitor.visitInsn(ICONST_3);
-            case 4 -> methodVisitor.visitInsn(ICONST_4);
-            case 5 -> methodVisitor.visitInsn(ICONST_5);
-            default -> {
-                if (Byte.MIN_VALUE <= addend && addend <= Byte.MAX_VALUE) {
-                    methodVisitor.visitIntInsn(BIPUSH, addend);
-                } else if (Short.MIN_VALUE <= addend && addend <= Short.MAX_VALUE) {
-                    methodVisitor.visitIntInsn(SIPUSH, addend);
-                } else {
-                    methodVisitor.visitLdcInsn(addend);
-                }
-            }
-        }
-    }
-
-    private static void visitConstantLong(MethodVisitor methodVisitor, long addend) {
-        if (addend == 0L) {
-            methodVisitor.visitInsn(LCONST_0);
-        } else if (addend == 1L) {
-            methodVisitor.visitInsn(LCONST_1);
-        } else {
-            methodVisitor.visitLdcInsn(addend);
-        }
     }
 
 }

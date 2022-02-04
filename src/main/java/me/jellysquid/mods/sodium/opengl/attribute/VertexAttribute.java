@@ -1,5 +1,7 @@
 package me.jellysquid.mods.sodium.opengl.attribute;
 
+import java.util.Objects;
+
 public class VertexAttribute {
     private final int format;
     private final int count;
@@ -52,5 +54,18 @@ public class VertexAttribute {
 
     public boolean isIntType() {
         return this.intType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VertexAttribute attribute = (VertexAttribute) o;
+        return format == attribute.format && count == attribute.count && pointer == attribute.pointer && size == attribute.size && normalized == attribute.normalized && intType == attribute.intType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(format, count, pointer, size, normalized, intType);
     }
 }

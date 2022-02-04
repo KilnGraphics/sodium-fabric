@@ -1,8 +1,11 @@
 package me.jellysquid.mods.sodium.asm;
 
+import me.jellysquid.mods.sodium.SodiumClientMod;
 import me.jellysquid.mods.sodium.interop.vanilla.vertex.VanillaVertexFormats;
+import me.jellysquid.mods.sodium.opengl.attribute.VertexFormat;
 import me.jellysquid.mods.sodium.render.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.render.vertex.buffer.VertexBufferWriterUnsafe;
+import me.jellysquid.mods.sodium.render.vertex.type.BufferVertexType;
 import org.lwjgl.system.MemoryUtil;
 
 import java.lang.invoke.MethodHandle;
@@ -16,31 +19,20 @@ public class ExampleGeneratedVertexSink extends VertexBufferWriterUnsafe impleme
     static {
         MethodHandle m = null;
         try {
-            m = createWriteVertexHandle();
+            MethodType methodType = MethodType.methodType(void.class, new Class[] {float.class, float.class, float.class, int.class, float.class, float.class, int.class, int.class, int.class});
+            m = MethodHandles.lookup().findVirtual(ExampleGeneratedVertexSink.class, "writeVertex", methodType);
+            m = m.asType(m.type().changeParameterType(0, GeneratedVertexSink.class));
         } catch (NoSuchMethodException | IllegalAccessException e) {
-            e.printStackTrace();
+            SodiumClientMod.logger().error("Unable to locate method writeVertex for method handle", e);
         }
-
         WRITE_VERTEX_HANDLE = m;
     }
 
-    private static MethodHandle createWriteVertexHandle() throws NoSuchMethodException, IllegalAccessException {
-//        try {
-            return MethodHandles.lookup().findVirtual(
-                    ExampleGeneratedVertexSink.class,
-                    "writeVertex",
-                    MethodType.methodType(void.class, float.class, float.class, float.class, int.class, float.class, float.class, int.class, int.class, int.class)
-            );
-//        } catch (NoSuchMethodException | IllegalAccessException e) {
-//            throw new IllegalStateException("Unable to locate writeVertex method for method handle", e);
-//        }
+    public ExampleGeneratedVertexSink(VertexBufferView backingBuffer, BufferVertexType<?> vertexType) {
+        super(backingBuffer, vertexType);
     }
 
-    public ExampleGeneratedVertexSink(VertexBufferView backingBuffer) {
-        super(backingBuffer, VanillaVertexFormats.QUADS);
-    }
-
-    public void writeVertex(float x, float y, float z, int color, float u, float v, int light, int overlay, int normal) {
+    public void writeVertex(float x, float y, float z, int color, float u, float v, int light, int overlay, int normal, int test) {
         long i = this.writePointer;
 
         MemoryUtil.memPutFloat(i, x);
@@ -52,6 +44,7 @@ public class ExampleGeneratedVertexSink extends VertexBufferWriterUnsafe impleme
         MemoryUtil.memPutInt(i + 24, overlay);
         MemoryUtil.memPutInt(i + 28, light);
         MemoryUtil.memPutInt(i + 32, normal);
+        MemoryUtil.memPutInt(i + 36, test);
 
         this.advance();
     }

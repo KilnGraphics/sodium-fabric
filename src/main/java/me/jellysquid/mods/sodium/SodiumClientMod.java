@@ -9,6 +9,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
+
 public class SodiumClientMod implements ClientModInitializer {
     private static UserConfig CONFIG;
     private static Logger LOGGER;
@@ -27,6 +32,17 @@ public class SodiumClientMod implements ClientModInitializer {
 
         LOGGER = LogManager.getLogger("Sodium");
         CONFIG = loadConfig();
+
+        Options options = new OptionsBuilder()
+                .include(VertexSinkBenchmark.class.getName() + ".*")
+                .forks(0)
+                .build();
+
+        try {
+            new Runner(options).run();
+        } catch (RunnerException e) {
+            LOGGER.error("Error running JMH benchmark", e);
+        }
     }
 
     public static UserConfig options() {

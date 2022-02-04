@@ -11,4 +11,8 @@ public class MathUtil {
     public static long toMib(long x) {
         return x / 1024L / 1024L;
     }
+
+    public static int ceilDiv(int dividend, int divisor) {
+        return (dividend + divisor - 1) / divisor;
+    }
 }
