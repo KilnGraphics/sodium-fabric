@@ -1,6 +1,6 @@
 package me.jellysquid.mods.sodium.mixin.features.entity.instancing;
 
-import me.jellysquid.mods.sodium.interop.vanilla.consumer.SpriteTexturedVertexConsumerAccessor;
+import me.jellysquid.mods.sodium.interop.vanilla.mixin.SpriteTexturedVertexConsumerAccessor;
 import net.minecraft.client.render.SpriteTexturedVertexConsumer;
 import net.minecraft.client.render.VertexConsumer;
 import org.spongepowered.asm.mixin.Final;

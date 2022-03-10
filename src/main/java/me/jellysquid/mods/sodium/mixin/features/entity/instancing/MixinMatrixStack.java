@@ -1,12 +1,12 @@
 package me.jellysquid.mods.sodium.mixin.features.entity.instancing;
 
-import me.jellysquid.mods.sodium.interop.vanilla.math.matrix.MatrixStackExtended;
+import me.jellysquid.mods.sodium.interop.vanilla.mixin.MatrixStackHolder;
 import me.jellysquid.mods.sodium.render.entity.data.InstanceBatch;
 import net.minecraft.client.util.math.MatrixStack;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(MatrixStack.class)
-public class MixinMatrixStack implements MatrixStackExtended {
+public class MixinMatrixStack implements MatrixStackHolder {
 
     private InstanceBatch batch;
 

@@ -3,7 +3,6 @@ package me.jellysquid.mods.sodium.render.entity.data;
 import com.google.common.collect.Iterators;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import me.jellysquid.mods.sodium.SodiumClientMod;
-import me.jellysquid.mods.sodium.interop.vanilla.buffer.VertexBufferAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.MultiPhaseAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.MultiPhaseParametersAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.RenderPhaseAccessor;
@@ -104,6 +103,15 @@ public class ModelBakingData implements Closeable, Iterable<Map<RenderLayer, Map
     }
 
     public void writeData() {
+        for (Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> perOrderedSectionData : this) {
+            for (Map<BufferBackedModel, InstanceBatch> perRenderLayerData : perOrderedSectionData.values()) {
+                for (InstanceBatch instanceBatch : perRenderLayerData.values()) {
+                    if (instanceBatch.size() > 0) {
+                    }
+                }
+            }
+        }
+
         writeSplitData(opaqueSection);
 
         for (Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> transparencySection : orderedTransparencySections) {

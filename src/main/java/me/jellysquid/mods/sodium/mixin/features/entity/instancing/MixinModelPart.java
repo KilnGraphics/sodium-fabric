@@ -1,7 +1,6 @@
 package me.jellysquid.mods.sodium.mixin.features.entity.instancing;
 
-import me.jellysquid.mods.sodium.interop.vanilla.consumer.ModelVboBufferBuilder;
-import me.jellysquid.mods.sodium.interop.vanilla.math.matrix.MatrixStackExtended;
+import me.jellysquid.mods.sodium.interop.vanilla.mixin.MatrixStackHolder;
 import me.jellysquid.mods.sodium.render.entity.BakedModelUtils;
 import me.jellysquid.mods.sodium.render.entity.data.InstanceBatch;
 import me.jellysquid.mods.sodium.render.entity.part.BakeablePart;
@@ -147,7 +146,7 @@ public abstract class MixinModelPart implements BakeablePart {
             modelMat.a31 = newModel31;
             modelMat.a32 = newModel32;
 
-            InstanceBatch batch = ((MatrixStackExtended) matrices).getBatch();
+            InstanceBatch batch = ((MatrixStackHolder) matrices).getBatch();
             // FIXME: is this always ok to do? think this is bad with skeleton holding bows
             if (batch != null) {
                 batch.getMatrices().set(bmm$id, this.visible ? currentStackEntry : null); // TODO: does this method ever get called when the part is not visible?
@@ -194,7 +193,7 @@ public abstract class MixinModelPart implements BakeablePart {
 
                 matrices.pop();
             } else if (bmm$usingSmartRenderer) {
-                recurseSetNullMatrix(((MatrixStackExtended) matrices).getBatch(), (ModelPart) (Object) this);
+                recurseSetNullMatrix(((MatrixStackHolder) matrices).getBatch(), (ModelPart) (Object) this);
             }
         }
     }

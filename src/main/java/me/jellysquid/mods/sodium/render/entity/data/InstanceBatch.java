@@ -71,10 +71,10 @@ public class InstanceBatch {
         int lightX = light & (LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE | 0xFF0F);
         int lightY = light >> 16 & (LightmapTextureManager.MAX_BLOCK_LIGHT_COORDINATE | 0xFF0F);
 
-        // this can happen if the model didn't render any modelparts,
+        // this can happen if the model didn't render any model parts,
         // in which case it makes sense to not try to render it anyway.
         if (matrices.isEmpty()) return;
-        long partIndex = matrices.write(partBuffer, baseMatrixEntry); // FIXME: just move this to the end and don't worry about async for now (maybe)
+        long partIndex = matrices.write(partBuffer.write(), baseMatrixEntry); // FIXME: just move this to the end and don't worry about async for now (maybe)
 
         int[] primitiveIndices = null;
         int skippedPrimitivesStart = 0;
@@ -190,90 +190,6 @@ public class InstanceBatch {
             lastIndex += primitiveIndices.length * drawMode.vertexCount;
             // (primitiveIndices.length - skippedPrimitivesStart - skippedPrimitivesEnd) * drawMode.vertexCount;
         }
-    }
-
-    // The Cool Way(tm) to do index writing
-    private static SequenceBuilder getIndexFunction(IntType indexType, VertexFormat.DrawMode drawMode) {
-        SequenceBuilder function;
-        switch (indexType) {
-            case BYTE -> {
-                switch (drawMode) {
-                    case LINES -> function = (ptr, startIdx, ignored) -> {
-                        MemoryUtil.memPutByte(ptr, (byte) startIdx);
-                        MemoryUtil.memPutByte(ptr + 1, (byte) (startIdx + 1));
-                        MemoryUtil.memPutByte(ptr + 2, (byte) (startIdx + 2));
-                        MemoryUtil.memPutByte(ptr + 3, (byte) (startIdx + 3));
-                        MemoryUtil.memPutByte(ptr + 4, (byte) (startIdx + 2));
-                        MemoryUtil.memPutByte(ptr + 5, (byte) (startIdx + 1));
-                    };
-                    case QUADS -> function = (ptr, startIdx, ignored) -> {
-                        MemoryUtil.memPutByte(ptr, (byte) startIdx);
-                        MemoryUtil.memPutByte(ptr + 1, (byte) (startIdx + 1));
-                        MemoryUtil.memPutByte(ptr + 2, (byte) (startIdx + 2));
-                        MemoryUtil.memPutByte(ptr + 3, (byte) (startIdx + 2));
-                        MemoryUtil.memPutByte(ptr + 4, (byte) (startIdx + 3));
-                        MemoryUtil.memPutByte(ptr + 5, (byte) startIdx);
-                    };
-                    default -> function = (ptr, startIdx, vertsPerPrim) -> {
-                        for (int i = 0; i < drawMode.vertexCount; i++) {
-                            MemoryUtil.memPutByte(ptr + i, (byte) (startIdx + i));
-                        }
-                    };
-                }
-            }
-            case SHORT -> {
-                switch (drawMode) {
-                    case LINES -> function = (ptr, startIdx, ignored) -> {
-                        MemoryUtil.memPutShort(ptr, (short) startIdx);
-                        MemoryUtil.memPutShort(ptr + 2, (short) (startIdx + 1));
-                        MemoryUtil.memPutShort(ptr + 4, (short) (startIdx + 2));
-                        MemoryUtil.memPutShort(ptr + 6, (short) (startIdx + 3));
-                        MemoryUtil.memPutShort(ptr + 8, (short) (startIdx + 2));
-                        MemoryUtil.memPutShort(ptr + 10, (short) (startIdx + 1));
-                    };
-                    case QUADS -> function = (ptr, startIdx, ignored) -> {
-                        MemoryUtil.memPutShort(ptr, (short) startIdx);
-                        MemoryUtil.memPutShort(ptr + 2, (short) (startIdx + 1));
-                        MemoryUtil.memPutShort(ptr + 4, (short) (startIdx + 2));
-                        MemoryUtil.memPutShort(ptr + 6, (short) (startIdx + 2));
-                        MemoryUtil.memPutShort(ptr + 8, (short) (startIdx + 3));
-                        MemoryUtil.memPutShort(ptr + 10, (short) startIdx);
-                    };
-                    default -> function = (ptr, startIdx, vertsPerPrim) -> {
-                        for (int i = 0; i < drawMode.vertexCount; i++) {
-                            MemoryUtil.memPutShort(ptr + i * 2L, (short) (startIdx + i));
-                        }
-                    };
-                }
-            }
-            case INT -> {
-                switch (drawMode) {
-                    case LINES -> function = (ptr, startIdx, ignored) -> {
-                        MemoryUtil.memPutInt(ptr, startIdx);
-                        MemoryUtil.memPutInt(ptr + 4, startIdx + 1);
-                        MemoryUtil.memPutInt(ptr + 8, startIdx + 2);
-                        MemoryUtil.memPutInt(ptr + 12, startIdx + 3);
-                        MemoryUtil.memPutInt(ptr + 16, startIdx + 2);
-                        MemoryUtil.memPutInt(ptr + 20, startIdx + 1);
-                    };
-                    case QUADS -> function = (ptr, startIdx, ignored) -> {
-                        MemoryUtil.memPutInt(ptr, startIdx);
-                        MemoryUtil.memPutInt(ptr + 4, startIdx + 1);
-                        MemoryUtil.memPutInt(ptr + 8, startIdx + 2);
-                        MemoryUtil.memPutInt(ptr + 12,startIdx + 2);
-                        MemoryUtil.memPutInt(ptr + 16,startIdx + 3);
-                        MemoryUtil.memPutInt(ptr + 20, startIdx);
-                    };
-                    default -> function = (ptr, startIdx, vertsPerPrim) -> {
-                        for (int i = 0; i < drawMode.vertexCount; i++) {
-                            MemoryUtil.memPutInt(ptr + i * 4L, startIdx + i);
-                        }
-                    };
-                }
-            }
-            default -> throw new IllegalArgumentException("Index type " + indexType.name() + " unknown");
-        }
-        return function;
     }
 
     public long getIndexStartingPos() {

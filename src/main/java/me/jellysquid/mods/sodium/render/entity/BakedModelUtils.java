@@ -1,7 +1,6 @@
 package me.jellysquid.mods.sodium.render.entity;
 
-import me.jellysquid.mods.sodium.interop.vanilla.consumer.ModelVboBufferBuilder;
-import me.jellysquid.mods.sodium.interop.vanilla.consumer.SpriteTexturedVertexConsumerAccessor;
+import me.jellysquid.mods.sodium.interop.vanilla.mixin.SpriteTexturedVertexConsumerAccessor;
 import me.jellysquid.mods.sodium.render.entity.data.ModelBakingData;
 import me.jellysquid.mods.sodium.render.entity.renderer.InstancedEntityRenderer;
 import net.minecraft.client.render.BufferBuilder;

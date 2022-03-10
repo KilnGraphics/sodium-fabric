@@ -87,7 +87,7 @@ public class MixinRenderLayer {
 
         @Override
         public Program<VanillaShaderInterface> createProgram() {
-            if (this.shader instanceof RenderPhaseShaderAccess access) {
+            if (this.shader instanceof RenderPhaseShaderAccessor access) {
                 var supplier = access.getShader();
                 var shader = supplier.get();
 

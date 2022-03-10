@@ -1,9 +1,9 @@
 package me.jellysquid.mods.sodium.interop.vanilla.model;
 
-import me.jellysquid.mods.sodium.opengl.array.VertexArrayBuffer;
+import me.jellysquid.mods.sodium.opengl.buffer.Buffer;
 
 public interface BufferBackedModel {
-    VertexArrayBuffer getVertexBuffer();
+    Buffer getVertexBuffer();
 
     int getVertexCount();
 

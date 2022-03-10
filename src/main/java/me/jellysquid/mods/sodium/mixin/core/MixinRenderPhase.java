@@ -115,7 +115,7 @@ public class MixinRenderPhase {
     }
 
     @Mixin(RenderPhase.Shader.class)
-    public static class MixinShader implements RenderPhaseShaderAccess {
+    public static class MixinShader implements RenderPhaseShaderAccessor {
         @Shadow
         @Final
         private Optional<Supplier<Shader>> supplier;

@@ -3,6 +3,7 @@ package me.jellysquid.mods.sodium.render.immediate;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import me.jellysquid.mods.sodium.interop.vanilla.mixin.ShaderTexture;
 import me.jellysquid.mods.sodium.interop.vanilla.mixin.ShaderTextureParameters;
 import me.jellysquid.mods.sodium.opengl.buffer.Buffer;
@@ -12,7 +13,7 @@ import me.jellysquid.mods.sodium.opengl.pipeline.PipelineState;
 import me.jellysquid.mods.sodium.opengl.sampler.Sampler;
 import me.jellysquid.mods.sodium.opengl.types.IntType;
 import me.jellysquid.mods.sodium.opengl.types.PrimitiveType;
-import me.jellysquid.mods.sodium.render.sequence.ImmediateSequenceBuilders;
+import me.jellysquid.mods.sodium.render.sequence.SequenceBuilder;
 import me.jellysquid.mods.sodium.render.sequence.SequenceIndexBuffer;
 import me.jellysquid.mods.sodium.render.stream.MappedStreamingBuffer;
 import me.jellysquid.mods.sodium.render.stream.StreamingBuffer;
@@ -24,13 +25,117 @@ import org.lwjgl.opengl.GL30C;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
+import org.lwjgl.system.MemoryUtil;
+
 public class RenderImmediate {
+
+    private static final SequenceBuilder QUADS_SEQUENCE_BUILDER = new SequenceBuilder() {
+        @Override
+        public void write(long pointer, int baseVertex) {
+            MemoryUtil.memPutInt(pointer + 0 , baseVertex + 0);
+            MemoryUtil.memPutInt(pointer + 4 , baseVertex + 1);
+            MemoryUtil.memPutInt(pointer + 8 , baseVertex + 2);
+            MemoryUtil.memPutInt(pointer + 12, baseVertex + 2);
+            MemoryUtil.memPutInt(pointer + 16, baseVertex + 3);
+            MemoryUtil.memPutInt(pointer + 20, baseVertex + 0);
+        }
+
+        @Override
+        public void write(ByteBuffer buffer, int baseVertex) {
+            buffer.putInt(baseVertex + 0);
+            buffer.putInt(baseVertex + 1);
+            buffer.putInt(baseVertex + 2);
+            buffer.putInt(baseVertex + 2);
+            buffer.putInt(baseVertex + 3);
+            buffer.putInt(baseVertex + 0);
+        }
+
+        @Override
+        public int getVerticesPerPrimitive() {
+            return 4;
+        }
+
+        @Override
+        public int getIndicesPerPrimitive() {
+            return 6;
+        }
+
+        @Override
+        public IntType getElementType() {
+            return IntType.UNSIGNED_INT;
+        }
+    };
+
+    private static final SequenceBuilder LINES_SEQUENCE_BUILDER = new SequenceBuilder() {
+        @Override
+        public void write(long pointer, int baseVertex) {
+            MemoryUtil.memPutInt(pointer + 0 , baseVertex + 0);
+            MemoryUtil.memPutInt(pointer + 4 , baseVertex + 1);
+            MemoryUtil.memPutInt(pointer + 8 , baseVertex + 2);
+            MemoryUtil.memPutInt(pointer + 12, baseVertex + 3);
+            MemoryUtil.memPutInt(pointer + 16, baseVertex + 2);
+            MemoryUtil.memPutInt(pointer + 20, baseVertex + 1);
+        }
+
+        @Override
+        public void write(ByteBuffer buffer, int baseVertex) {
+            buffer.putInt(baseVertex + 0);
+            buffer.putInt(baseVertex + 1);
+            buffer.putInt(baseVertex + 2);
+            buffer.putInt(baseVertex + 3);
+            buffer.putInt(baseVertex + 2);
+            buffer.putInt(baseVertex + 1);
+        }
+
+        @Override
+        public int getVerticesPerPrimitive() {
+            return 4;
+        }
+
+        @Override
+        public int getIndicesPerPrimitive() {
+            return 6;
+        }
+
+        @Override
+        public IntType getElementType() {
+            return IntType.UNSIGNED_INT;
+        }
+    };
+
+    private static final SequenceBuilder DEFAULT_SEQUENCE_BUILDER = new SequenceBuilder() {
+        @Override
+        public void write(long pointer, int baseVertex) {
+            MemoryUtil.memPutInt(pointer, baseVertex);
+        }
+
+        @Override
+        public void write(ByteBuffer buffer, int baseVertex) {
+            buffer.putInt(baseVertex);
+        }
+
+        @Override
+        public int getVerticesPerPrimitive() {
+            return 1;
+        }
+
+        @Override
+        public int getIndicesPerPrimitive() {
+            return 1;
+        }
+
+        @Override
+        public IntType getElementType() {
+            return IntType.UNSIGNED_INT;
+        }
+    };
+
     private static RenderImmediate INSTANCE;
 
     private final StreamingBuffer vertexBuffer;
     private final StreamingBuffer elementBuffer;
 
-    private final Map<ImmediateSequenceBuilders, SequenceIndexBuffer> defaultElementBuffers;
+    private final Reference2ObjectMap<VertexFormat.DrawMode, SequenceIndexBuffer> defaultElementBuffers;
     private final RenderDevice device;
 
     private final Map<ShaderTextureParameters, Sampler> samplers = new Object2ObjectOpenHashMap<>();
@@ -43,9 +148,9 @@ public class RenderImmediate {
         this.vertexBuffer = new MappedStreamingBuffer(device, 64 * 1024 * 1024);
         this.elementBuffer = new MappedStreamingBuffer(device, 8 * 1024 * 1024);
 
-        for (ImmediateSequenceBuilders sequenceType : ImmediateSequenceBuilders.values()) {
-            this.defaultElementBuffers.put(sequenceType, new SequenceIndexBuffer(device, sequenceType));
-        }
+        this.defaultElementBuffers.put(VertexFormat.DrawMode.QUADS, new SequenceIndexBuffer(device, QUADS_SEQUENCE_BUILDER));
+        this.defaultElementBuffers.put(VertexFormat.DrawMode.LINES, new SequenceIndexBuffer(device, LINES_SEQUENCE_BUILDER));
+        this.defaultElementBuffers.defaultReturnValue(new SequenceIndexBuffer(device, DEFAULT_SEQUENCE_BUILDER));
     }
 
     public void draw(Pipeline<VanillaShaderInterface, VanillaShaderInterface.BufferTarget> pipeline, ShaderTexture[] shaderTextures,
@@ -61,7 +166,7 @@ public class RenderImmediate {
         var vertexBufferHandle = this.vertexBuffer.write(vertexData);
 
         if (useDefaultElementBuffer) {
-            var sequenceBufferBuilder = this.defaultElementBuffers.get(ImmediateSequenceBuilders.map(drawMode));
+            var sequenceBufferBuilder = this.defaultElementBuffers.get(drawMode);
             sequenceBufferBuilder.ensureCapacity(vertexCount);
 
             this.draw(pipeline, shaderTextures, drawMode, vertexFormat,

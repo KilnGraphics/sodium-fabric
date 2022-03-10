@@ -4,6 +4,6 @@ import net.minecraft.client.render.Shader;
 
 import java.util.function.Supplier;
 
-public interface RenderPhaseShaderAccess {
+public interface RenderPhaseShaderAccessor {
     Supplier<Shader> getShader();
 }

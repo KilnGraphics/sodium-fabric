@@ -11,8 +11,8 @@ import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormatElement;
 import net.minecraft.client.render.VertexFormats;
 
-public class BakedModelVertexFormats {
-    public static final VertexFormat SMART_ENTITY_FORMAT = new VertexFormat(
+public class InstancedModelVertexFormats {
+    public static final VertexFormat DEFAULT_ENTITY_FORMAT = new VertexFormat(
             ImmutableMap.<String, VertexFormatElement>builder()
                     .put("Position", VertexFormats.POSITION_ELEMENT)
                     // Four bytes of padding - this rounds out the vec3 to a vec4

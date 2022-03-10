@@ -12,8 +12,8 @@ public class BakedModelShaderManager {
 
     public static void loadShaders(ResourceManager manager) {
         try {
-            ENTITY_CUTOUT_NO_CULL_INSTANCED = new Shader(manager, "rendertype_entity_cutout_no_cull_instanced", BakedModelVertexFormats.SMART_ENTITY_FORMAT);
-            ENTITY_TRANSLUCENT_BATCHED = new Shader(manager, "rendertype_entity_translucent_batched", BakedModelVertexFormats.SMART_ENTITY_FORMAT);
+            ENTITY_CUTOUT_NO_CULL_INSTANCED = new Shader(manager, "rendertype_entity_cutout_no_cull_instanced", InstancedModelVertexFormats.DEFAULT_ENTITY_FORMAT);
+            ENTITY_TRANSLUCENT_BATCHED = new Shader(manager, "rendertype_entity_translucent_batched", InstancedModelVertexFormats.DEFAULT_ENTITY_FORMAT);
         } catch (IOException e) {
             e.printStackTrace();
         }

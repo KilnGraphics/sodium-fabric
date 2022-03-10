@@ -1,4 +1,4 @@
-package me.jellysquid.mods.sodium.interop.vanilla.consumer;
+package me.jellysquid.mods.sodium.interop.vanilla.mixin;
 
 import net.minecraft.client.render.VertexConsumer;
 

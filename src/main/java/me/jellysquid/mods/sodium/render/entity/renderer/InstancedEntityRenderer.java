@@ -2,8 +2,8 @@ package me.jellysquid.mods.sodium.render.entity.renderer;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.jellysquid.mods.sodium.interop.vanilla.buffer.VertexBufferAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.model.BufferBackedModel;
+import me.jellysquid.mods.sodium.opengl.buffer.Buffer;
 import me.jellysquid.mods.sodium.opengl.device.RenderDevice;
 import me.jellysquid.mods.sodium.render.entity.DebugInfo;
 import me.jellysquid.mods.sodium.render.entity.data.ModelBakingData;
@@ -84,7 +84,7 @@ public class  InstancedEntityRenderer implements EntityRenderer {
         int instanceOffset = 0;
 
         RenderLayer currentRenderLayer = null;
-        TessellationImpl currentTesselation = null;
+        Buffer currentVertexBuffer = null;
         BufferRenderer.unbindAll();
 
         for (Map<RenderLayer, Map<BufferBackedModel, InstanceBatch>> perOrderedSectionData : modelBakingData) {
@@ -104,25 +104,25 @@ public class  InstancedEntityRenderer implements EntityRenderer {
 
                 for (Map.Entry<BufferBackedModel, InstanceBatch> perModelData : perRenderLayerData.getValue().entrySet()) {
                     BufferBackedModel model = perModelData.getKey();
-                    TessellationImpl nextTesselation = (TessellationImpl) model.getVertexBuffer();
-                    int vertexCount = nextTesselation.getIndexCount();
+                    Buffer nextVertexBuffer = model.getVertexBuffer();
+                    int vertexCount = model.getVertexCount();
                     if (vertexCount <= 0) continue;
 
                     InstanceBatch instanceBatch = perModelData.getValue();
                     boolean isIndexed = instanceBatch.isIndexed();
 
-                    boolean firstVbo = currentTesselation == null;
-                    if (firstVbo || !currentTesselation.equals(nextTesselation)) {
+                    boolean firstVbo = currentVertexBuffer == null;
+                    if (firstVbo || !currentVertexBuffer.equals(nextTesselation)) {
                         if (!firstVbo) {
-                            currentTesselation.getElementFormat().endDrawing();
+                            currentVertexBuffer.getElementFormat().endDrawing();
                         }
-                        currentTesselation = nextTesselation;
+                        currentVertexBuffer = nextTesselation;
                         vertexBufferAccessor.invokeBindVertexArray();
                         if (isIndexed) {
                             GL30C.glBindBufferBase(ARBShaderStorageBufferObject.GL_SHADER_STORAGE_BUFFER, 3, vertexBufferAccessor.getVertexBufferId());
                         } else {
                             vertexBufferAccessor.invokeBind();
-                            currentTesselation.getElementFormat().startDrawing();
+                            currentVertexBuffer.getElementFormat().startDrawing();
                         }
                     }
 

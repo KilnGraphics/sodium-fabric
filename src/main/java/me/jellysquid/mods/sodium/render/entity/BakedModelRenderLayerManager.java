@@ -4,7 +4,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.MultiPhaseAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.MultiPhaseParametersAccessor;
 import me.jellysquid.mods.sodium.interop.vanilla.layer.RenderLayerAccessor;
-import me.jellysquid.mods.sodium.interop.vanilla.layer.RenderPhaseShaderAccessor;
 import net.minecraft.client.render.*;
 import org.jetbrains.annotations.Nullable;
 
