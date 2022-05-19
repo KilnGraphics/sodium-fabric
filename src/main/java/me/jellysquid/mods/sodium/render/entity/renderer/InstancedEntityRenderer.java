@@ -26,14 +26,7 @@ public class  InstancedEntityRenderer implements EntityRenderer {
 
     public static final int BUFFER_CREATION_FLAGS = GL30C.GL_MAP_WRITE_BIT | ARBBufferStorage.GL_MAP_PERSISTENT_BIT;
     public static final int BUFFER_MAP_FLAGS = GL30C.GL_MAP_WRITE_BIT | GL30C.GL_MAP_FLUSH_EXPLICIT_BIT | ARBBufferStorage.GL_MAP_PERSISTENT_BIT;
-    public static final long PART_PBO_SIZE = 9175040L; // 8.75 MiB
-    public static final long MODEL_PBO_SIZE = 524288L; // 512 KiB
-    public static final long TRANSLUCENT_EBO_SIZE = 1048576L; // 1 MiB
 
-    // TODO: rename these
-    public final StreamingBuffer partBuffer;
-    public final StreamingBuffer modelBuffer;
-    public final StreamingBuffer translucentElementBuffer;
 
     public InstancedEntityRenderer(RenderDevice renderDevice) {
         partBuffer = new MappedStreamingBuffer(renderDevice, 1024 * 1024 * 24);
