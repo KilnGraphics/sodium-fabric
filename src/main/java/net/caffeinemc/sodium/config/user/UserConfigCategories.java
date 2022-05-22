@@ -9,6 +9,7 @@ import net.caffeinemc.sodium.gui.config.CyclingControl;
 import net.caffeinemc.sodium.gui.config.SliderControl;
 import net.caffeinemc.sodium.gui.config.TickBoxControl;
 import net.caffeinemc.sodium.interop.vanilla.options.MinecraftOptionsStorage;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.*;
 import net.minecraft.text.Text;
 
@@ -34,7 +35,7 @@ public class UserConfigCategories {
                         .setName(Text.translatable("options.simulationDistance"))
                         .setTooltip(Text.translatable("sodium.options.simulation_distance.tooltip"))
                         .setControl(option -> new SliderControl(option, 5, 32, 1, ControlValueFormatter.translateVariable("options.chunks")))
-                        .setBinding(new VanillaOptionBinding<>(vanillaOpts.getData().getViewDistance()))
+                        .setBinding(new VanillaOptionBinding<>(vanillaOpts.getData().getSimulationDistance()))
                         .setImpact(OptionImpact.HIGH)
                         .build())
                 .add(OptionImpl.createBuilder(int.class, vanillaOpts)
@@ -52,7 +53,12 @@ public class UserConfigCategories {
                         .setName(Text.translatable("options.guiScale"))
                         .setTooltip(Text.translatable("sodium.options.gui_scale.tooltip"))
                         .setControl(option -> new SliderControl(option, 0, 4, 1, ControlValueFormatter.guiScale()))
-                        .setBinding(new VanillaOptionBinding<>(vanillaOpts.getData().getGuiScale()))
+                        .setBinding((opts, value) -> {
+                            opts.getGuiScale().setValue(value);
+
+                            MinecraftClient client = MinecraftClient.getInstance();
+                            client.onResolutionChanged();
+                        }, opts -> opts.getGuiScale().getValue())
                         .build())
                 .add(OptionImpl.createBuilder(boolean.class, vanillaOpts)
                         .setName(Text.translatable("options.fullscreen"))
